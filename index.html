@@ -4,56 +4,65 @@
     <meta charset="UTF-8">
     <title>ASIK Messenger</title>
     <style>
-        /* Здесь наш олдскульный стиль: зеленый цветочек, синие заголовки */
-        body { background: #ECE9D8; font-family: Tahoma, sans-serif; font-size: 12px; }
-        #chat-box { width: 300px; height: 400px; border: 2px inset #fff; background: white; overflow-y: scroll; margin-bottom: 10px; padding: 5px; }
-        .msg { margin-bottom: 5px; border-bottom: 1px dotted #ccc; }
-        .nickname { color: blue; font-weight: bold; }
-        input { border: 1px solid #7B9ebd; padding: 3px; }
+        body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .window { width: 320px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .content { padding: 10px; }
+        #chat { height: 250px; background: white; border: 2px inset #fff; overflow-y: auto; margin-bottom: 10px; padding: 5px; font-size: 13px; color: black; }
+        .input-group { display: flex; gap: 5px; flex-direction: column; }
+        input { border: 2px inset #fff; padding: 5px; outline: none; }
+        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; padding: 5px; cursor: pointer; font-weight: bold; }
+        button:active { border: 2px inset #fff; }
     </style>
 </head>
 <body>
 
-    <h3><img src="https://img.icons8.com/color/24/000000/flower.png"> ASIK Messenger</h3>
+<div class="window">
+    <div class="title-bar">
+        <span>ASIK Messenger</span>
+        <span>✕</span>
+    </div>
+    <div class="content">
+        <div id="chat"></div>
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Твой ник">
+            <input type="text" id="msg" placeholder="Сообщение...">
+            <button onclick="send()">ОТПРАВИТЬ</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+    // ВНИМАНИЕ: Вставь свою ссылку ниже между кавычек!
+    const firebaseConfig = {
+        databaseURL: "ЗДЕСЬ_ТВОЯ_ССЫЛКА_ИЗ_FIREBASE"
+    };
     
-    <div id="chat-box"></div>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    <input type="text" id="user" placeholder="Твой ник" style="width: 60px;">
-    <input type="text" id="message" placeholder="Сообщение..." style="width: 160px;">
-    <button onclick="sendMessage()">Отпр.</button>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <script>
-        // ТВОИ НАСТРОЙКИ (Вставь свою ссылку ниже)
-        const firebaseConfig = {
-            databaseURL: "ВСТАВЬ_ССЫЛКУ_ИЗ_ШАГА_1_ЗДЕСЬ"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // Функция отправки
-        function sendMessage() {
-            const user = document.getElementById('user').value || "Аноним";
-            const text = document.getElementById('message').value;
-            if (text) {
-                db.ref("messages").push().set({
-                    username: user,
-                    text: text,
-                    timestamp: Date.now()
-                });
-                document.getElementById('message').value = "";
-            }
+    function send() {
+        const user = document.getElementById('username').value || "Аноним";
+        const text = document.getElementById('msg').value;
+        if (text.trim() !== "") {
+            db.ref("messages").push().set({
+                username: user,
+                text: text
+            });
+            document.getElementById('msg').value = "";
         }
+    }
 
-        // Слушаем новые сообщения
-        db.ref("messages").on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            const box = document.getElementById('chat-box');
-            box.innerHTML += `<div class="msg"><span class="nickname">${data.username}:</span> ${data.text}</div>`;
-            box.scrollTop = box.scrollHeight;
-        });
-    </script>
+    db.ref("messages").on("child_added", (snapshot) => {
+        const data = snapshot.val();
+        const chat = document.getElementById('chat');
+        chat.innerHTML += `<div><b>${data.username}:</b> ${data.text}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+    });
+</script>
+
 </body>
 </html>
