@@ -2,50 +2,50 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK Messenger - Contacts</title>
+    <title>ASIK Messenger - Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .window { width: 95%; max-width: 300px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 450px; }
-        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 6px; font-weight: bold; display: flex; justify-content: space-between; font-size: 12px; }
+        .window { width: 95%; max-width: 300px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 480px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 6px; font-weight: bold; display: flex; justify-content: space-between; font-size: 12px; align-items: center; }
         
-        /* Список контактов */
         #contact-list { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; }
-        .contact-item { padding: 5px 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
-        .contact-item:hover { background: #000080; color: white; }
+        .contact-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; color: black; font-size: 13px; }
+        .contact-item:hover { background: #e0e0e0; }
         .flower { width: 16px; height: 16px; }
 
-        /* Окно чата (скрыто по умолчанию) */
         #chat-window { display: none; flex-direction: column; height: 100%; }
-        #messages { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; padding: 5px; font-size: 13px; }
+        #messages { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; padding: 8px; font-size: 13px; color: black; }
         
         .controls { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
-        input { border: 2px inset #fff; padding: 6px; outline: none; }
-        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; cursor: pointer; padding: 5px; font-weight: bold; }
-        .back-btn { background: #c0c0c0; border: 1px solid #000; font-size: 10px; margin-right: 5px; }
+        input { border: 2px inset #fff; padding: 8px; outline: none; font-size: 14px; }
+        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; cursor: pointer; padding: 8px; font-weight: bold; }
+        .back-btn { background: #c0c0c0; border: 1px solid #000; font-size: 12px; padding: 2px 6px; }
     </style>
 </head>
 <body>
 
 <div class="window" id="main-window">
     <div class="title-bar">
-        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="width:14px;"> ASIK - Список</span>
-        <button class="back-btn" onclick="addContact()">+</button>
+        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="width:14px; vertical-align: middle;"> ASIK - Контакты</span>
+        <button onclick="addContact()" style="font-size:10px; cursor:pointer;">+ ДОБАВИТЬ</button>
     </div>
     
-    <div style="padding: 5px;"><input type="number" id="myUin" placeholder="Мой UIN (напр. 111)" style="width: 90%;"></div>
+    <div style="padding: 10px;">
+        <label style="font-size: 10px; font-weight: bold;">МОЙ НОМЕР:</label><br>
+        <input type="number" id="myUin" placeholder="Напр: 123" style="width: 85%;">
+    </div>
     
-    <div id="contact-list">
-        </div>
+    <div id="contact-list"></div>
 </div>
 
 <div class="window" id="chat-window">
     <div class="title-bar">
-        <span><button class="back-btn" onclick="showContacts()"> < </button> Чат с <span id="target-label">...</span></span>
+        <span><button class="back-btn" onclick="showContacts()"><</button> Чат с: <span id="target-label">...</span></span>
     </div>
     <div id="messages"></div>
     <div class="controls">
-        <input type="text" id="msgInput" placeholder="Сообщение...">
+        <input type="text" id="msgInput" placeholder="Написать сообщение...">
         <button onclick="sendMessage()">ОТПРАВИТЬ</button>
     </div>
 </div>
@@ -58,8 +58,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
+    // Звук пузырька
+    const bubbleSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+
     let currentTarget = null;
-    let contacts = JSON.parse(localStorage.getItem('asik_contacts') || "[]");
+    let contacts = JSON.parse(localStorage.getItem('asik_contacts') || '["777"]'); // 777 уже в списке!
 
     function renderContacts() {
         const list = document.getElementById('contact-list');
@@ -67,7 +70,8 @@
         contacts.forEach(uin => {
             const div = document.createElement('div');
             div.className = 'contact-item';
-            div.innerHTML = `<img src="https://img.icons8.com/color/16/flower.png" class="flower"> UIN: ${uin}`;
+            const icon = uin === "777" ? "https://img.icons8.com/color/16/robot-2.png" : "https://img.icons8.com/color/16/flower.png";
+            div.innerHTML = `<img src="${icon}" class="flower"> <b>${uin}</b> ${uin === "777" ? "(Gemini Бот)" : ""}`;
             div.onclick = () => openChat(uin);
             list.appendChild(div);
         });
@@ -84,7 +88,7 @@
 
     function openChat(uin) {
         const myUin = document.getElementById('myUin').value;
-        if (!myUin) { alert("Сначала введи свой UIN!"); return; }
+        if (!myUin) { alert("Сначала впиши свой номер в поле 'МОЙ НОМЕР'!"); return; }
         
         currentTarget = uin;
         document.getElementById('main-window').style.display = 'none';
@@ -93,23 +97,39 @@
         
         const chatId = [myUin, uin].sort().join("_");
         const msgBox = document.getElementById('messages');
-        msgBox.innerHTML = "";
+        msgBox.innerHTML = `<div style="text-align:center; color:gray; font-size:10px;">История сообщений загружена</div>`;
         
         db.ref("private_chats/" + chatId).off();
         db.ref("private_chats/" + chatId).on("child_added", (snap) => {
             const data = snap.val();
-            msgBox.innerHTML += `<div><b>${data.from}:</b> ${data.text}</div>`;
+            const align = data.from == myUin ? "text-align:right;" : "text-align:left;";
+            const color = data.from == myUin ? "#000080" : "#006400";
+            msgBox.innerHTML += `<div style="${align} margin-bottom:5px;"><b style="color:${color};">${data.from}:</b> ${data.text}</div>`;
             msgBox.scrollTop = msgBox.scrollHeight;
+            
+            if (data.from != myUin) bubbleSound.play().catch(()=>{});
         });
     }
 
     function sendMessage() {
         const myUin = document.getElementById('myUin').value;
-        const text = document.getElementById('msgInput').value;
+        const msgInput = document.getElementById('msgInput');
+        const text = msgInput.value;
+        
         if (text.trim() && currentTarget) {
             const chatId = [myUin, currentTarget].sort().join("_");
             db.ref("private_chats/" + chatId).push().set({ from: myUin, text: text });
-            document.getElementById('msgInput').value = "";
+            msgInput.value = "";
+
+            // ЛОГИКА БОТА 777
+            if (currentTarget === "777") {
+                setTimeout(() => {
+                    db.ref("private_chats/" + chatId).push().set({ 
+                        from: "777", 
+                        text: "О-оу! Я в сети. Твой мессенджер работает отлично! 🚲" 
+                    });
+                }, 1000);
+            }
         }
     }
 
@@ -117,6 +137,8 @@
         document.getElementById('main-window').style.display = 'flex';
         document.getElementById('chat-window').style.display = 'none';
     }
+
+    document.getElementById('msgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
     renderContacts();
 </script>
