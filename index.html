@@ -8,7 +8,7 @@
         .window { width: 320px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
         .content { padding: 10px; }
-        #chat { height: 250px; background: white; border: 2px inset #fff; overflow-y: auto; margin-bottom: 10px; padding: 5px; font-size: 13px; color: black; }
+        #chat { height: 250px; background: white; border: 2px inset #fff; overflow-y: auto; margin-bottom: 10px; padding: 5px; font-size: 13px; color: black; text-align: left; }
         .input-group { display: flex; gap: 5px; flex-direction: column; }
         input { border: 2px inset #fff; padding: 5px; outline: none; }
         button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; padding: 5px; cursor: pointer; font-weight: bold; }
@@ -19,7 +19,7 @@
 
 <div class="window">
     <div class="title-bar">
-        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="vertical-align: middle;"> ASIK Messenger</span>
+        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="vertical-align: middle; width: 16px; height: 16px;"> ASIK Messenger</span>
         <span>✕</span>
     </div>
     <div class="content">
@@ -43,11 +43,14 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Звук "O-oh!"
-    const notificationSound = new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=df73347b-13f5-4762-881c-d78201a613d3');
+    // Новый стабильный звук уведомления
+    const notificationSound = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
 
     function playSound() {
-        notificationSound.play().catch(e => console.log("Нужен клик по странице для активации звука"));
+        notificationSound.currentTime = 0; // Сбрасываем в начало
+        notificationSound.play().catch(function(e) {
+            console.log("Ожидание взаимодействия пользователя для звука...");
+        });
     }
 
     function send() {
@@ -64,18 +67,18 @@
         }
     }
 
-    // Слушаем сообщения
+    // Слушаем базу данных
     db.ref("messages").on("child_added", (snapshot) => {
         const data = snapshot.val();
         const chat = document.getElementById('chat');
         chat.innerHTML += `<div><b>${data.username}:</b> ${data.text}</div>`;
         chat.scrollTop = chat.scrollHeight;
         
-        // Звук сработает, если ты хотя бы раз кликнул по окну
+        // Воспроизводим звук при получении любого сообщения
         playSound();
     });
 
-    // Отправка по Enter
+    // Отправка по кнопке Enter
     document.getElementById('msg').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') { send(); }
     });
