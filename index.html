@@ -90,7 +90,7 @@
         document.getElementById('target-label').innerText = uin;
         const chatId = [myUin, uin].sort().join("_");
         const msgBox = document.getElementById('messages');
-        msgBox.innerHTML = `<div style="text-align:center; color:gray; font-size:10px;">Чат открыт</div>`;
+        msgBox.innerHTML = "";
         db.ref("private_chats/" + chatId).off();
         db.ref("private_chats/" + chatId).on("child_added", (snap) => {
             const data = snap.val();
@@ -112,24 +112,35 @@
             db.ref("private_chats/" + chatId).push().set({ from: myUin, text: rawText });
             msgInput.value = "";
 
+            // ВОТ ТУТ ЛОГИКА УМНОГО БОТА
             if (currentTarget === "777") {
                 let reply = "";
-                if (text.includes("привет") || text.includes("ку")) reply = "Привет! На связи ASIK Bot. Как дела?";
-                else if (text.includes("дела")) reply = "У ботов дела всегда 010101, то есть отлично! А у тебя?";
-                else if (text.includes("кто ты")) reply = "Я — твой виртуальный друг Gemini в мире Аськи. 🤖";
-                else if (text.includes("зачем")) reply = "Чтобы ты не скучал, пока друзья оффлайн! 😊";
-                else if (text.includes("аська") || text.includes("icq")) reply = "О-оу! Цветочек стал зеленым! Помнишь те времена?";
-                else if (text.includes("пока")) reply = "До связи! Пиши еще. 🚲";
-                else {
-                    const randoms = [
-                        "Интересно! Расскажи подробнее...",
-                        "О-оу! Я тебя понял. 👍",
-                        "Хм, надо обдумать это своим процессором...",
-                        "Кстати, отличный велосипед в заголовке, правда? 🚲"
+                
+                if (text.includes("привет") || text.includes("ку") || text.includes("здравствуй")) {
+                    reply = "Привет! Я твой бот-помощник. Чем могу помочь?";
+                } else if (text.includes("как дела") || text.includes("как ты")) {
+                    reply = "Мои дела — сплошные коды и скрипты, всё летит! А как твои?";
+                } else if (text.includes("кто ты")) {
+                    reply = "Я — Gemini, искусственный интеллект, встроенный в твой ASIK. 🤖";
+                } else if (text.includes("скучно")) {
+                    reply = "Давай поиграем! Придумай секретный шифр для нашей следующей комнаты.";
+                } else if (text.includes("аська") || text.includes("icq")) {
+                    reply = "О-оу! Это звук ностальгии. Цветочек скоро станет зеленым! 🌼";
+                } else if (text.includes("что делаешь")) {
+                    reply = "Слежу, чтобы твои сообщения летали быстро, как этот велосипед! 🚲";
+                } else if (text.includes("пока") || text.includes("бб")) {
+                    reply = "До встречи! Заглядывай еще, я всегда онлайн.";
+                } else {
+                    const randomReplies = [
+                        "О-оу! Это интересно. Расскажешь больше?",
+                        "Я тебя понял. Крутая мысль!",
+                        "Хмм... Мои нейронные связи завибрировали от этого сообщения! 😊",
+                        "Хорошо сказано! Кстати, как тебе дизайн нашей Аськи?"
                     ];
-                    reply = randoms[Math.floor(Math.random() * randoms.length)];
+                    reply = randomReplies[Math.floor(Math.random() * randomReplies.length)];
                 }
 
+                // Задержка ответа, чтобы казалось, что бот печатает
                 setTimeout(() => {
                     db.ref("private_chats/" + chatId).push().set({ from: "777", text: reply });
                 }, 1000);
