@@ -3,15 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <title>ASIK Messenger</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/plasticine/100/bicycle.png">
+
     <style>
-        body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .window { width: 320px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        body { 
+            background-color: #008080; 
+            font-family: 'Tahoma', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        .window { 
+            width: 95%; 
+            max-width: 320px; 
+            background: #c0c0c0; 
+            border: 2px solid #fff; 
+            border-right: 2px solid #808080; 
+            border-bottom: 2px solid #808080; 
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); 
+        }
+        .title-bar { 
+            background: linear-gradient(90deg, #000080, #1084d0); 
+            color: white; 
+            padding: 4px 6px; 
+            font-weight: bold; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 13px; 
+        }
         .content { padding: 10px; }
-        #chat { height: 250px; background: white; border: 2px inset #fff; overflow-y: auto; margin-bottom: 10px; padding: 5px; font-size: 13px; color: black; text-align: left; }
+        #chat { 
+            height: 300px; 
+            background: white; 
+            border: 2px inset #fff; 
+            overflow-y: auto; 
+            margin-bottom: 10px; 
+            padding: 8px; 
+            font-size: 14px; 
+            color: black; 
+            text-align: left; 
+        }
         .input-group { display: flex; gap: 5px; flex-direction: column; }
-        input { border: 2px inset #fff; padding: 5px; outline: none; }
-        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; padding: 5px; cursor: pointer; font-weight: bold; }
+        input { 
+            border: 2px inset #fff; 
+            padding: 10px; 
+            outline: none; 
+            font-size: 16px; /* 16px предотвращает зум на iPhone */
+        }
+        button { 
+            background: #c0c0c0; 
+            border: 2px solid #fff; 
+            border-right: 2px solid #808080; 
+            border-bottom: 2px solid #808080; 
+            padding: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            text-transform: uppercase;
+        }
         button:active { border: 2px inset #fff; }
     </style>
 </head>
@@ -19,7 +75,7 @@
 
 <div class="window">
     <div class="title-bar">
-        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="vertical-align: middle; width: 16px; height: 16px;"> ASIK Messenger</span>
+        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="vertical-align: middle; width: 18px; height: 18px;"> ASIK Messenger</span>
         <span>✕</span>
     </div>
     <div class="content">
@@ -43,13 +99,13 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Новый стабильный звук уведомления
-    const notificationSound = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+    // Звук пузырька (Pop)
+    const bubbleSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
 
     function playSound() {
-        notificationSound.currentTime = 0; // Сбрасываем в начало
-        notificationSound.play().catch(function(e) {
-            console.log("Ожидание взаимодействия пользователя для звука...");
+        bubbleSound.currentTime = 0;
+        bubbleSound.play().catch(function(e) {
+            console.log("Ждем клика для звука");
         });
     }
 
@@ -67,18 +123,16 @@
         }
     }
 
-    // Слушаем базу данных
     db.ref("messages").on("child_added", (snapshot) => {
         const data = snapshot.val();
         const chat = document.getElementById('chat');
-        chat.innerHTML += `<div><b>${data.username}:</b> ${data.text}</div>`;
+        chat.innerHTML += `<div><b style="color:#000080;">${data.username}:</b> ${data.text}</div>`;
         chat.scrollTop = chat.scrollHeight;
         
-        // Воспроизводим звук при получении любого сообщения
+        // Воспроизводим пузырек
         playSound();
     });
 
-    // Отправка по кнопке Enter
     document.getElementById('msg').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') { send(); }
     });
