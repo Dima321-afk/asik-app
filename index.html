@@ -19,7 +19,7 @@
 
 <div class="window">
     <div class="title-bar">
-        <span>ASIK Messenger</span>
+        <span><img src="https://img.icons8.com/color/16/000000/flower.png" style="vertical-align: middle;"> ASIK Messenger</span>
         <span>✕</span>
     </div>
     <div class="content">
@@ -36,41 +36,49 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    // ВНИМАНИЕ: Вставь свою ссылку ниже между кавычек!
     const firebaseConfig = {
         databaseURL: "https://asik-app-32e5b-default-rtdb.firebaseio.com"
     };
     
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();// Создаем объект звука
+    const db = firebase.database();
+
+    // Звук "O-oh!"
     const notificationSound = new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=df73347b-13f5-4762-881c-d78201a613d3');
 
-    // Функция для проигрывания звука
     function playSound() {
-        notificationSound.play().catch(e => console.log("Звук заблокирован браузером. Нажми на страницу!"));
+        notificationSound.play().catch(e => console.log("Нужен клик по странице для активации звука"));
     }
 
     function send() {
         const user = document.getElementById('username').value || "Аноним";
-        const text = document.getElementById('msg').value;
+        const msgInput = document.getElementById('msg');
+        const text = msgInput.value;
+        
         if (text.trim() !== "") {
             db.ref("messages").push().set({
                 username: user,
                 text: text
             });
-            document.getElementById('msg').value = "";
+            msgInput.value = "";
         }
     }
 
+    // Слушаем сообщения
     db.ref("messages").on("child_added", (snapshot) => {
         const data = snapshot.val();
         const chat = document.getElementById('chat');
         chat.innerHTML += `<div><b>${data.username}:</b> ${data.text}</div>`;
         chat.scrollTop = chat.scrollHeight;
         
-        // ВОТ ЭТА СТРОЧКА ДОБАВЛЯЕТ ЗВУК:
+        // Звук сработает, если ты хотя бы раз кликнул по окну
         playSound();
-    })
+    });
+
+    // Отправка по Enter
+    document.getElementById('msg').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') { send(); }
+    });
 </script>
 
 </body>
