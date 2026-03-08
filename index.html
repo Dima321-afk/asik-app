@@ -67,7 +67,10 @@
         const chat = document.getElementById('chat');
         chat.innerHTML += `<div><b>${data.username}:</b> ${data.text}</div>`;
         chat.scrollTop = chat.scrollHeight;
-    });
+        
+        // ВОТ ЭТА СТРОЧКА ДОБАВЛЯЕТ ЗВУК:
+        playSound();
+    })
 </script>
 
 </body>
