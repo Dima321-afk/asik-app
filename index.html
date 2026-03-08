@@ -2,37 +2,44 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK Messenger - Pro</title>
+    <title>ASIK Messenger</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="apple-touch-icon" href="https://img.icons8.com/plasticine/100/bicycle.png">
     <style>
-        body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .window { width: 95%; max-width: 300px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 480px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        .window { width: 95%; max-width: 300px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 500px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 6px; font-weight: bold; display: flex; justify-content: space-between; font-size: 12px; align-items: center; }
+        
         #contact-list { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; }
         .contact-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; color: black; font-size: 13px; }
         .contact-item:hover { background: #e0e0e0; }
         .flower { width: 16px; height: 16px; }
+
         #chat-window { display: none; flex-direction: column; height: 100%; }
         #messages { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; padding: 8px; font-size: 13px; color: black; }
+        
         .controls { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
-        input { border: 2px inset #fff; padding: 8px; outline: none; font-size: 14px; }
+        input { border: 2px inset #fff; padding: 8px; outline: none; font-size: 14px; background: white; }
         button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; cursor: pointer; padding: 8px; font-weight: bold; }
         .back-btn { background: #c0c0c0; border: 1px solid #000; font-size: 12px; padding: 2px 6px; }
+        
+        .my-info { padding: 10px; background: #d0d0d0; border-bottom: 1px solid #808080; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <div class="window" id="main-window">
     <div class="title-bar">
-        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="width:14px; vertical-align: middle;"> ASIK - Контакты</span>
-        <button onclick="addContact()" style="font-size:10px; cursor:pointer;">+ ДОБАВИТЬ</button>
+        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="width:14px; vertical-align: middle;"> ASIK Messenger</span>
+        <button onclick="addContact()">+ ДОБАВИТЬ</button>
     </div>
-    <div style="padding: 10px;">
-        <label style="font-size: 10px; font-weight: bold;">МОЙ НОМЕР:</label><br>
-        <input type="number" id="myUin" placeholder="Напр: 123" style="width: 85%;">
+    
+    <div class="my-info">
+        <b>МОЙ UIN:</b> <span id="displayMyUin">не задан</span>
+        <button onclick="changeMyUin()" style="padding: 2px; font-size: 9px; margin-left: 10px;">изменить</button>
     </div>
+    
     <div id="contact-list"></div>
 </div>
 
@@ -42,7 +49,7 @@
     </div>
     <div id="messages"></div>
     <div class="controls">
-        <input type="text" id="msgInput" placeholder="Написать сообщение...">
+        <input type="text" id="msgInput" placeholder="Сообщение...">
         <button onclick="sendMessage()">ОТПРАВИТЬ</button>
     </div>
 </div>
@@ -54,10 +61,29 @@
     const firebaseConfig = { databaseURL: "https://asik-app-32e5b-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const bubbleSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+    
+    // Тот самый звук "O-oh!" из ICQ
+    const icqSound = new Audio('https://raw.githubusercontent.com/the-muda-organization/icq-sounds/master/message.wav');
 
     let currentTarget = null;
+    let myUin = localStorage.getItem('asik_my_uin');
     let contacts = JSON.parse(localStorage.getItem('asik_contacts') || '["777"]');
+
+    // Если UIN не задан, спрашиваем сразу
+    if (!myUin) {
+        changeMyUin();
+    } else {
+        document.getElementById('displayMyUin').innerText = myUin;
+    }
+
+    function changeMyUin() {
+        const newUserUin = prompt("Введите ваш личный UIN номер:");
+        if (newUserUin) {
+            myUin = newUserUin;
+            localStorage.setItem('asik_my_uin', myUin);
+            document.getElementById('displayMyUin').innerText = myUin;
+        }
+    }
 
     function renderContacts() {
         const list = document.getElementById('contact-list');
@@ -66,14 +92,14 @@
             const div = document.createElement('div');
             div.className = 'contact-item';
             const icon = uin === "777" ? "https://img.icons8.com/color/16/robot-2.png" : "https://img.icons8.com/color/16/flower.png";
-            div.innerHTML = `<img src="${icon}" class="flower"> <b>${uin}</b> ${uin === "777" ? "(Gemini Бот)" : ""}`;
+            div.innerHTML = `<img src="${icon}" class="flower"> <b>${uin}</b>`;
             div.onclick = () => openChat(uin);
             list.appendChild(div);
         });
     }
 
     function addContact() {
-        const uin = prompt("Введите UIN друга:");
+        const uin = prompt("Введите UIN друга для добавления:");
         if (uin && !contacts.includes(uin)) {
             contacts.push(uin);
             localStorage.setItem('asik_contacts', JSON.stringify(contacts));
@@ -82,69 +108,38 @@
     }
 
     function openChat(uin) {
-        const myUin = document.getElementById('myUin').value;
-        if (!myUin) { alert("Впиши свой номер!"); return; }
+        if (!myUin) { alert("Сначала задайте свой UIN!"); return; }
         currentTarget = uin;
         document.getElementById('main-window').style.display = 'none';
         document.getElementById('chat-window').style.display = 'flex';
         document.getElementById('target-label').innerText = uin;
+        
         const chatId = [myUin, uin].sort().join("_");
         const msgBox = document.getElementById('messages');
         msgBox.innerHTML = "";
+        
         db.ref("private_chats/" + chatId).off();
         db.ref("private_chats/" + chatId).on("child_added", (snap) => {
             const data = snap.val();
             const align = data.from == myUin ? "text-align:right;" : "text-align:left;";
-            msgBox.innerHTML += `<div style="${align} margin-bottom:5px;"><b>${data.from}:</b> ${data.text}</div>`;
+            const color = data.from == myUin ? "#000080" : "#006400";
+            msgBox.innerHTML += `<div style="${align} margin-bottom:5px;"><b style="color:${color};">${data.from}:</b> ${data.text}</div>`;
             msgBox.scrollTop = msgBox.scrollHeight;
-            if (data.from != myUin) bubbleSound.play().catch(()=>{});
+            
+            // Звук только на входящие
+            if (data.from != myUin) {
+                icqSound.play().catch(()=>{});
+            }
         });
     }
 
     function sendMessage() {
-        const myUin = document.getElementById('myUin').value;
         const msgInput = document.getElementById('msgInput');
-        const rawText = msgInput.value;
-        const text = rawText.toLowerCase().trim();
-        
-        if (text && currentTarget) {
+        const text = msgInput.value;
+        if (text.trim() && currentTarget && myUin) {
             const chatId = [myUin, currentTarget].sort().join("_");
-            db.ref("private_chats/" + chatId).push().set({ from: myUin, text: rawText });
+            db.ref("private_chats/" + chatId).push().set({ from: myUin, text: text });
             msgInput.value = "";
-
-            // ВОТ ТУТ ЛОГИКА УМНОГО БОТА
-            if (currentTarget === "777") {
-                let reply = "";
-                
-                if (text.includes("привет") || text.includes("ку") || text.includes("здравствуй")) {
-                    reply = "Привет! Я твой бот-помощник. Чем могу помочь?";
-                } else if (text.includes("как дела") || text.includes("как ты")) {
-                    reply = "Мои дела — сплошные коды и скрипты, всё летит! А как твои?";
-                } else if (text.includes("кто ты")) {
-                    reply = "Я — Gemini, искусственный интеллект, встроенный в твой ASIK. 🤖";
-                } else if (text.includes("скучно")) {
-                    reply = "Давай поиграем! Придумай секретный шифр для нашей следующей комнаты.";
-                } else if (text.includes("аська") || text.includes("icq")) {
-                    reply = "О-оу! Это звук ностальгии. Цветочек скоро станет зеленым! 🌼";
-                } else if (text.includes("что делаешь")) {
-                    reply = "Слежу, чтобы твои сообщения летали быстро, как этот велосипед! 🚲";
-                } else if (text.includes("пока") || text.includes("бб")) {
-                    reply = "До встречи! Заглядывай еще, я всегда онлайн.";
-                } else {
-                    const randomReplies = [
-                        "О-оу! Это интересно. Расскажешь больше?",
-                        "Я тебя понял. Крутая мысль!",
-                        "Хмм... Мои нейронные связи завибрировали от этого сообщения! 😊",
-                        "Хорошо сказано! Кстати, как тебе дизайн нашей Аськи?"
-                    ];
-                    reply = randomReplies[Math.floor(Math.random() * randomReplies.length)];
-                }
-
-                // Задержка ответа, чтобы казалось, что бот печатает
-                setTimeout(() => {
-                    db.ref("private_chats/" + chatId).push().set({ from: "777", text: reply });
-                }, 1000);
-            }
         }
     }
 
