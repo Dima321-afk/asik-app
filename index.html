@@ -42,7 +42,13 @@
     };
     
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const db = firebase.database();// Создаем объект звука
+    const notificationSound = new Audio('https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptoken=df73347b-13f5-4762-881c-d78201a613d3');
+
+    // Функция для проигрывания звука
+    function playSound() {
+        notificationSound.play().catch(e => console.log("Звук заблокирован браузером. Нажми на страницу!"));
+    }
 
     function send() {
         const user = document.getElementById('username').value || "Аноним";
