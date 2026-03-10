@@ -2,53 +2,67 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK Messenger Pro</title>
+    <title>ASIK Messenger - Professional Edition</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/plasticine/100/bicycle.png">
     
     <style>
-        body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .window { width: 95%; max-width: 320px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 90vh; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
-        .status-bar { padding: 5px 10px; background: #d0d0d0; border-bottom: 1px solid #808080; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
-        #contact-list { flex-grow: 1; background: white; margin: 2px; border: 2px inset #fff; overflow-y: auto; }
-        .contact-item { padding: 12px 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; color: black; font-size: 14px; transition: 0.1s; }
-        .contact-item:active { background: #000080; color: white; }
-        .flower { width: 18px; height: 18px; filter: grayscale(100%); }
+        :root { --win-bg: #c0c0c0; --win-blue: #000080; --win-blue-light: #1084d0; --border-light: #fff; --border-dark: #808080; }
+        body { background-color: #008080; font-family: 'Tahoma', 'Geneva', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        .window { width: 95%; max-width: 350px; background: var(--win-bg); border: 2px solid var(--border-light); border-right-color: var(--border-dark); border-bottom-color: var(--border-dark); display: flex; flex-direction: column; height: 90vh; box-shadow: 4px 4px 15px rgba(0,0,0,0.6); }
+        
+        .title-bar { background: linear-gradient(90deg, var(--win-blue), var(--win-blue-light)); color: white; padding: 4px 6px; font-weight: bold; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
+        
+        .status-bar { padding: 4px 8px; background: #d0d0d0; border: 1px inset #fff; margin: 2px; font-size: 11px; display: flex; justify-content: space-between; }
+        
+        #contact-list { flex-grow: 1; background: white; margin: 4px; border: 2px inset var(--border-light); overflow-y: auto; }
+        
+        .contact-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; color: black; font-size: 14px; }
+        .contact-item:hover { background: #f0f0f0; }
+        .contact-item:active { background: var(--win-blue); color: white; }
+        
+        .flower { width: 20px; height: 20px; filter: grayscale(100%); transition: 0.3s; }
         .flower.online { filter: grayscale(0%); }
         
         #chat-window { display: none; flex-direction: column; height: 100%; }
-        #messages { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; padding: 10px; font-size: 13px; color: black; scroll-behavior: smooth; }
-        .controls { padding: 8px; display: flex; flex-direction: column; gap: 5px; background: #c0c0c0; border-top: 1px solid #808080; }
-        input { border: 2px inset #fff; padding: 12px; outline: none; font-size: 16px; background: white; border-radius: 0; -webkit-appearance: none; }
-        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; cursor: pointer; padding: 8px; font-weight: bold; font-family: 'Tahoma'; }
-        button:active { border: 2px inset #fff; padding: 9px 7px 7px 9px; }
-        .back-btn { padding: 2px 10px; margin-right: 5px; }
+        #messages { flex-grow: 1; background: white; margin: 4px; border: 2px inset var(--border-light); overflow-y: auto; padding: 10px; font-size: 13px; line-height: 1.4; }
+        
+        .msg-me { text-align: right; color: #000080; margin-bottom: 10px; }
+        .msg-them { text-align: left; color: #006400; margin-bottom: 10px; }
+        
+        .controls { padding: 6px; background: var(--win-bg); border-top: 1px solid var(--border-dark); display: flex; flex-direction: column; gap: 4px; }
+        
+        input { border: 2px inset #fff; padding: 10px; font-size: 16px; font-family: 'Tahoma'; border-radius: 0; outline: none; }
+        
+        button { background: var(--win-bg); border: 2px solid var(--border-light); border-right-color: var(--border-dark); border-bottom-color: var(--border-dark); cursor: pointer; padding: 6px 12px; font-size: 12px; font-weight: bold; font-family: 'Tahoma'; }
+        button:active { border: 2px inset #fff; padding: 7px 11px 5px 13px; }
+        
+        .name-label { font-size: 10px; color: #555; display: block; }
     </style>
 </head>
 <body>
 
 <div class="window" id="main-window">
     <div class="title-bar">
-        <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="width:16px; vertical-align: middle;"> ASIK Messenger</span>
-        <button onclick="addContact()" style="font-size:10px;">+ ДОБАВИТЬ</button>
+        <span><img src="https://img.icons8.com/color/20/flower.png" style="width:16px; vertical-align: middle;"> ASIK v2.0</span>
+        <button onclick="addContact()">ДОБАВИТЬ</button>
     </div>
     <div class="status-bar">
-        <span>Мой UIN: <b id="my-uin-display">...</b></span>
-        <button onclick="logout()" style="font-size:9px;">Выход</button>
+        <span>Вы: <b id="my-uin-display">...</b></span>
+        <button onclick="logout()" style="font-size:9px; padding: 2px 5px;">ВЫХОД</button>
     </div>
     <div id="contact-list"></div>
 </div>
 
 <div class="window" id="chat-window">
     <div class="title-bar">
-        <span><button class="back-btn" onclick="showContacts()"><</button> Чат: <span id="target-label">...</span></span>
+        <span><button onclick="showContacts()" style="padding: 1px 6px;"><</button> Чат: <span id="target-label">...</span></span>
     </div>
     <div id="messages"></div>
     <div class="controls">
-        <input type="text" id="msgInput" placeholder="Введите сообщение..." autocomplete="off">
-        <button onclick="sendMessage()">ОТПРАВИТЬ (Enter)</button>
+        <input type="text" id="msgInput" placeholder="Введите текст..." autocomplete="off">
+        <button onclick="sendMessage()" style="height: 35px; background: #d0d0d0;">ОТПРАВИТЬ</button>
     </div>
 </div>
 
@@ -62,48 +76,75 @@
     
     const alertSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-    let currentTarget = null;
     let myUin = localStorage.getItem('asik_saved_uin');
-    let contacts = JSON.parse(localStorage.getItem('asik_contacts') || '["777"]');
+    let currentTarget = null;
+    // Контакты теперь хранят и UIN, и Имя
+    let contactData = JSON.parse(localStorage.getItem('asik_contact_data') || '{}');
 
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
+    if (Notification.permission !== "granted") { Notification.requestPermission(); }
 
     function checkLogin() {
         if (!myUin) {
-            let u = prompt("UIN (номер):");
+            let u = prompt("Введите ваш номер (UIN):");
             if (u && u.trim() !== "") {
                 myUin = u.trim();
                 localStorage.setItem('asik_saved_uin', myUin);
             } else { location.reload(); }
         }
         document.getElementById('my-uin-display').innerText = myUin;
-        setUserOnline();
+        setUserStatus(true);
         renderContacts();
         startGlobalListener();
     }
 
-    function setUserOnline() {
-        const statusRef = db.ref('status/' + myUin);
-        statusRef.set(true);
-        statusRef.onDisconnect().remove();
+    function setUserStatus(online) {
+        const ref = db.ref('status/' + myUin);
+        if (online) {
+            ref.set(true);
+            ref.onDisconnect().remove();
+        }
+    }
+
+    function renderContacts() {
+        const list = document.getElementById('contact-list');
+        list.innerHTML = "";
+        Object.keys(contactData).forEach(uin => {
+            const name = contactData[uin];
+            const div = document.createElement('div');
+            div.className = 'contact-item';
+            div.innerHTML = `
+                <img src="https://img.icons8.com/color/48/flower.png" class="flower" id="flower-${uin}">
+                <div>
+                    <b>${name}</b>
+                    <span class="name-label">UIN: ${uin}</span>
+                </div>`;
+            div.onclick = () => openChat(uin, name);
+            list.appendChild(div);
+        });
+    }
+
+    function addContact() {
+        const uin = prompt("Введите UIN друга:");
+        if (uin && uin.trim()) {
+            const name = prompt("Как его назвать?", uin);
+            contactData[uin.trim()] = name || uin;
+            localStorage.setItem('asik_contact_data', JSON.stringify(contactData));
+            location.reload();
+        }
     }
 
     function startGlobalListener() {
-        contacts.forEach(uin => {
-            const chatId = [myUin, uin].sort().join("_");
-            // Следим за статусом цветка
+        Object.keys(contactData).forEach(uin => {
             db.ref('status/' + uin).on('value', (snap) => {
                 const el = document.getElementById('flower-' + uin);
-                if (el) el.className = snap.val() ? 'flower online' : 'flower';
+                if (el) el.classList.toggle('online', !!snap.val());
             });
-            
-            // Слушатель новых сообщений
+
+            const chatId = [myUin, uin].sort().join("_");
             db.ref("private_chats/" + chatId).limitToLast(1).on("child_added", (snap) => {
                 const data = snap.val();
                 if (data.from !== myUin && currentTarget !== uin) {
-                    showNotification(data.from, data.text);
+                    showNotification(contactData[data.from] || data.from, data.text);
                     alertSound.play().catch(()=>{});
                 }
             });
@@ -112,28 +153,16 @@
 
     function showNotification(sender, text) {
         if (Notification.permission === "granted") {
-            const n = new Notification(`ASIK: ${sender}`, { body: text });
-            n.onclick = () => { window.focus(); openChat(sender); };
+            new Notification(`ASIK: ${sender}`, { body: text, icon: "https://img.icons8.com/color/48/flower.png" });
         }
     }
 
-    function renderContacts() {
-        const list = document.getElementById('contact-list');
-        list.innerHTML = "";
-        contacts.forEach(uin => {
-            const div = document.createElement('div');
-            div.className = 'contact-item';
-            div.innerHTML = `<img src="https://img.icons8.com/color/20/flower.png" class="flower" id="flower-${uin}"> <b>${uin}</b>`;
-            div.onclick = () => openChat(uin);
-            list.appendChild(div);
-        });
-    }
-
-    function openChat(uin) {
+    function openChat(uin, name) {
         currentTarget = uin;
         document.getElementById('main-window').style.display = 'none';
         document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('target-label').innerText = uin;
+        document.getElementById('target-label').innerText = name;
+        
         const msgBox = document.getElementById('messages');
         msgBox.innerHTML = "<i>Загрузка истории...</i>";
         
@@ -144,8 +173,8 @@
             snap.forEach(child => {
                 const data = child.val();
                 const isMe = data.from == myUin;
-                const style = isMe ? "text-align:right; color:#000080;" : "text-align:left; color:#006400;";
-                msgBox.innerHTML += `<div style="${style} margin-bottom:8px;"><b>${data.from}:</b><br>${data.text}</div>`;
+                const cls = isMe ? 'msg-me' : 'msg-them';
+                msgBox.innerHTML += `<div class="${cls}"><b>${isMe ? 'Вы' : name}:</b><br>${data.text}</div>`;
             });
             msgBox.scrollTop = msgBox.scrollHeight;
         });
@@ -166,15 +195,6 @@
         currentTarget = null;
         document.getElementById('main-window').style.display = 'flex';
         document.getElementById('chat-window').style.display = 'none';
-    }
-
-    function addContact() {
-        const uin = prompt("UIN друга:");
-        if (uin && uin.trim() && !contacts.includes(uin.trim())) {
-            contacts.push(uin.trim());
-            localStorage.setItem('asik_contacts', JSON.stringify(contacts));
-            location.reload();
-        }
     }
 
     function logout() { localStorage.clear(); location.reload(); }
