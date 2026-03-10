@@ -2,26 +2,29 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK Messenger</title>
+    <title>ASIK Messenger Pro</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="apple-touch-icon" href="https://img.icons8.com/plasticine/100/bicycle.png">
     
     <style>
         body { background-color: #008080; font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .window { width: 95%; max-width: 300px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 520px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .window { width: 95%; max-width: 320px; background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; display: flex; flex-direction: column; height: 90vh; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
-        .status-bar { padding: 5px 10px; background: #d0d0d0; border-bottom: 1px solid #808080; font-size: 11px; display: flex; justify-content: space-between; }
-        #contact-list { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; }
-        .contact-item { padding: 12px 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; color: black; font-size: 14px; }
+        .status-bar { padding: 5px 10px; background: #d0d0d0; border-bottom: 1px solid #808080; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+        #contact-list { flex-grow: 1; background: white; margin: 2px; border: 2px inset #fff; overflow-y: auto; }
+        .contact-item { padding: 12px 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; color: black; font-size: 14px; transition: 0.1s; }
         .contact-item:active { background: #000080; color: white; }
-        .flower { width: 18px; height: 18px; }
+        .flower { width: 18px; height: 18px; filter: grayscale(100%); }
+        .flower.online { filter: grayscale(0%); }
+        
         #chat-window { display: none; flex-direction: column; height: 100%; }
         #messages { flex-grow: 1; background: white; margin: 5px; border: 2px inset #fff; overflow-y: auto; padding: 10px; font-size: 13px; color: black; scroll-behavior: smooth; }
-        .controls { padding: 10px; display: flex; flex-direction: column; gap: 5px; background: #c0c0c0; }
-        input { border: 2px inset #fff; padding: 10px; outline: none; font-size: 16px; background: white; }
-        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; cursor: pointer; padding: 8px; font-weight: bold; }
-        .back-btn { padding: 2px 8px; }
+        .controls { padding: 8px; display: flex; flex-direction: column; gap: 5px; background: #c0c0c0; border-top: 1px solid #808080; }
+        input { border: 2px inset #fff; padding: 12px; outline: none; font-size: 16px; background: white; border-radius: 0; -webkit-appearance: none; }
+        button { background: #c0c0c0; border: 2px solid #fff; border-right: 2px solid #808080; border-bottom: 2px solid #808080; cursor: pointer; padding: 8px; font-weight: bold; font-family: 'Tahoma'; }
+        button:active { border: 2px inset #fff; padding: 9px 7px 7px 9px; }
+        .back-btn { padding: 2px 10px; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -29,7 +32,7 @@
 <div class="window" id="main-window">
     <div class="title-bar">
         <span><img src="https://img.icons8.com/plasticine/24/bicycle.png" style="width:16px; vertical-align: middle;"> ASIK Messenger</span>
-        <button onclick="addContact()" style="font-size:10px;">ДОБАВИТЬ</button>
+        <button onclick="addContact()" style="font-size:10px;">+ ДОБАВИТЬ</button>
     </div>
     <div class="status-bar">
         <span>Мой UIN: <b id="my-uin-display">...</b></span>
@@ -44,8 +47,8 @@
     </div>
     <div id="messages"></div>
     <div class="controls">
-        <input type="text" id="msgInput" placeholder="Написать сообщение...">
-        <button onclick="sendMessage()">ОТПРАВИТЬ</button>
+        <input type="text" id="msgInput" placeholder="Введите сообщение..." autocomplete="off">
+        <button onclick="sendMessage()">ОТПРАВИТЬ (Enter)</button>
     </div>
 </div>
 
@@ -63,39 +66,45 @@
     let myUin = localStorage.getItem('asik_saved_uin');
     let contacts = JSON.parse(localStorage.getItem('asik_contacts') || '["777"]');
 
-    // ПУНКТ 1 & 2: Запрос разрешения на уведомления
     if (Notification.permission !== "granted") {
         Notification.requestPermission();
     }
 
     function checkLogin() {
         if (!myUin) {
-            let u = prompt("Добро пожаловать!\nВведите ваш номер (UIN):");
+            let u = prompt("UIN (номер):");
             if (u && u.trim() !== "") {
                 myUin = u.trim();
                 localStorage.setItem('asik_saved_uin', myUin);
-            } else {
-                checkLogin();
-            }
+            } else { location.reload(); }
         }
         document.getElementById('my-uin-display').innerText = myUin;
+        setUserOnline();
         renderContacts();
-        startGlobalListener(); // Слушаем сообщения для всех контактов сразу
+        startGlobalListener();
     }
 
-    // Моя фишка: Глобальный слушатель для уведомлений, даже если чат закрыт
+    function setUserOnline() {
+        const statusRef = db.ref('status/' + myUin);
+        statusRef.set(true);
+        statusRef.onDisconnect().remove();
+    }
+
     function startGlobalListener() {
         contacts.forEach(uin => {
             const chatId = [myUin, uin].sort().join("_");
-            // Слушаем только последние сообщения, чтобы не спамить при входе
+            // Следим за статусом цветка
+            db.ref('status/' + uin).on('value', (snap) => {
+                const el = document.getElementById('flower-' + uin);
+                if (el) el.className = snap.val() ? 'flower online' : 'flower';
+            });
+            
+            // Слушатель новых сообщений
             db.ref("private_chats/" + chatId).limitToLast(1).on("child_added", (snap) => {
                 const data = snap.val();
-                if (data.from !== myUin) {
-                    // Показываем уведомление, если мы сейчас не в этом чате
-                    if (currentTarget !== uin) {
-                        showNotification(data.from, data.text);
-                        alertSound.play().catch(()=>{});
-                    }
+                if (data.from !== myUin && currentTarget !== uin) {
+                    showNotification(data.from, data.text);
+                    alertSound.play().catch(()=>{});
                 }
             });
         });
@@ -103,18 +112,9 @@
 
     function showNotification(sender, text) {
         if (Notification.permission === "granted") {
-            const n = new Notification(`ASIK: Сообщение от ${sender}`, {
-                body: text,
-                icon: "https://img.icons8.com/plasticine/100/bicycle.png"
-            });
-            // По клику на уведомление открываем чат
+            const n = new Notification(`ASIK: ${sender}`, { body: text });
             n.onclick = () => { window.focus(); openChat(sender); };
         }
-    }
-
-    function logout() {
-        localStorage.removeItem('asik_saved_uin');
-        location.reload();
     }
 
     function renderContacts() {
@@ -123,20 +123,10 @@
         contacts.forEach(uin => {
             const div = document.createElement('div');
             div.className = 'contact-item';
-            div.innerHTML = `<img src="https://img.icons8.com/color/20/flower.png" class="flower"> <b>${uin}</b>`;
+            div.innerHTML = `<img src="https://img.icons8.com/color/20/flower.png" class="flower" id="flower-${uin}"> <b>${uin}</b>`;
             div.onclick = () => openChat(uin);
             list.appendChild(div);
         });
-    }
-
-    function addContact() {
-        const uin = prompt("Введите номер друга:");
-        if (uin && uin.trim() !== "" && !contacts.includes(uin)) {
-            contacts.push(uin.trim());
-            localStorage.setItem('asik_contacts', JSON.stringify(contacts));
-            renderContacts();
-            location.reload(); // Перезагрузка, чтобы включить слушатель для нового друга
-        }
     }
 
     function openChat(uin) {
@@ -144,37 +134,29 @@
         document.getElementById('main-window').style.display = 'none';
         document.getElementById('chat-window').style.display = 'flex';
         document.getElementById('target-label').innerText = uin;
-        const chatId = [myUin, uin].sort().join("_");
         const msgBox = document.getElementById('messages');
-        const input = document.getElementById('msgInput');
+        msgBox.innerHTML = "<i>Загрузка истории...</i>";
         
-        msgBox.innerHTML = "";
-        
+        const chatId = [myUin, uin].sort().join("_");
         db.ref("private_chats/" + chatId).off();
-        db.ref("private_chats/" + chatId).on("child_added", (snap) => {
-            const data = snap.val();
-            const isMe = data.from == myUin;
-            const style = isMe ? "text-align:right; color:#000080;" : "text-align:left; color:#006400;";
-            msgBox.innerHTML += `<div style="${style} margin-bottom:8px;"><b>${data.from}:</b><br>${data.text}</div>`;
-            
-            // Фишка: Авто-скролл вниз
+        db.ref("private_chats/" + chatId).on("value", (snap) => {
+            msgBox.innerHTML = "";
+            snap.forEach(child => {
+                const data = child.val();
+                const isMe = data.from == myUin;
+                const style = isMe ? "text-align:right; color:#000080;" : "text-align:left; color:#006400;";
+                msgBox.innerHTML += `<div style="${style} margin-bottom:8px;"><b>${data.from}:</b><br>${data.text}</div>`;
+            });
             msgBox.scrollTop = msgBox.scrollHeight;
-            
-            if (!isMe && currentTarget === uin) {
-                alertSound.play().catch(()=>{});
-            }
         });
-
-        // Фишка: Сразу ставим фокус на ввод текста
-        input.focus();
+        document.getElementById('msgInput').focus();
     }
 
     function sendMessage() {
         const input = document.getElementById('msgInput');
-        const text = input.value.trim();
-        if (text && currentTarget) {
+        if (input.value.trim() && currentTarget) {
             const chatId = [myUin, currentTarget].sort().join("_");
-            db.ref("private_chats/" + chatId).push().set({ from: myUin, text: text });
+            db.ref("private_chats/" + chatId).push().set({ from: myUin, text: input.value.trim() });
             input.value = "";
             input.focus();
         }
@@ -186,8 +168,17 @@
         document.getElementById('chat-window').style.display = 'none';
     }
 
-    document.getElementById('msgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    function addContact() {
+        const uin = prompt("UIN друга:");
+        if (uin && uin.trim() && !contacts.includes(uin.trim())) {
+            contacts.push(uin.trim());
+            localStorage.setItem('asik_contacts', JSON.stringify(contacts));
+            location.reload();
+        }
+    }
 
+    function logout() { localStorage.clear(); location.reload(); }
+    document.getElementById('msgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     checkLogin();
 </script>
 </body>
