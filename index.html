@@ -20,7 +20,6 @@
 
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
         
-        /* Экран авторизации */
         #auth-screen { position: fixed; inset: 0; background: var(--bg-dark); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         .auth-card { background: var(--bg-sidebar); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 15px; width: 280px; text-align: center; }
         .auth-input { padding: 12px; border-radius: 10px; border: 1px solid #333; background: #000; color: white; outline: none; }
@@ -28,7 +27,6 @@
 
         .app-container { display: flex; width: 100vw; height: 100vh; }
 
-        /* Сайдбар */
         .sidebar { width: 100%; max-width: 400px; height: 100%; background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; z-index: 5; }
         .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-sidebar); }
         
@@ -38,7 +36,6 @@
         .avatar { width: 48px; height: 48px; border-radius: 50%; background: #2a3942; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; border: 2px solid var(--primary); color: white; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Чат */
         .chat-view { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-dark); position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10; }
         .chat-view.active { transform: translateX(0); }
 
@@ -110,16 +107,25 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    const firebaseConfig = { databaseURL: "https://asik-app-32e5b-default-rtdb.firebaseio.com" };
+    // Твой персональный мост через Cloudflare Workers
+    const proxyUrl = "https://dry-unit-8e71.dimitriykor321.workers.dev"; 
+
+    const firebaseConfig = { 
+        databaseURL: proxyUrl 
+    };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // Оптимизация под глушилки и офлайн режим
+    db.ref().keepSynced(true);
+    db.goOnline();
 
     let myUin = localStorage.getItem('asik_uin');
     let currentTarget = null;
     let selectedMsgId = null;
     let mediaRecorder, audioChunks = [];
 
-    // --- Авторизация ---
     if(myUin) {
         document.getElementById('auth-screen').style.display = 'none';
         startApp();
@@ -150,7 +156,6 @@
 
     function logout() { localStorage.clear(); location.reload(); }
 
-    // --- Запуск приложения ---
     function startApp() {
         db.ref(`profiles/${myUin}/avatar`).on('value', snap => {
             if(snap.val()) document.getElementById('my-avatar').innerHTML = `<img src="${snap.val()}">`;
@@ -216,7 +221,6 @@
         }
     }
 
-    // --- Голосовые ---
     async function toggleVoice() {
         const btn = document.getElementById('recordBtn');
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
