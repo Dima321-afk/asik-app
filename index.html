@@ -22,8 +22,8 @@
         
         #auth-screen { position: fixed; inset: 0; background: var(--bg-dark); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         .auth-card { background: var(--bg-sidebar); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 15px; width: 280px; text-align: center; }
-        .auth-input { padding: 12px; border-radius: 10px; border: 1px solid #333; background: #000; color: white; outline: none; }
-        .auth-btn { padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        .auth-input { padding: 12px; border-radius: 10px; border: 1px solid #333; background: #000; color: white; outline: none; width: 100%; box-sizing: border-box; }
+        .auth-btn { padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; width: 100%; }
 
         .app-container { display: flex; width: 100vw; height: 100vh; }
 
@@ -63,11 +63,11 @@
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h1 style="color:var(--primary); margin:0;">ASIK ∞</h1>
+        <h1 style="color:var(--primary); margin:0; padding-bottom: 10px;">ASIK ∞</h1>
         <input type="text" id="auth-uin" class="auth-input" placeholder="Ваш UIN">
         <input type="password" id="auth-pass" class="auth-input" placeholder="Пароль">
-        <button class="auth-btn" onclick="handleAuth()">ВОЙТИ / СОЗДАТЬ</button>
-        <div id="auth-error" style="color:var(--danger); font-size:0.7rem; margin-top:10px; min-height:15px;"></div>
+        <button class="auth-btn" id="loginBtn" onclick="handleAuth()">ВОЙТИ / СОЗДАТЬ</button>
+        <div id="auth-error" style="color:var(--danger); font-size:0.75rem; min-height:15px; margin-top: 5px;"></div>
     </div>
 </div>
 
@@ -79,7 +79,7 @@
     <div class="sidebar">
         <div class="header">
             <div class="avatar" id="my-avatar" onclick="updateAvatar()">?</div>
-            <h3 style="color:var(--primary)">ASIK</h3>
+            <h3 style="color:var(--primary); margin:0;">ASIK</h3>
             <button class="btn-action" onclick="addFriend()">👤+</button>
         </div>
         <div id="contact-list"></div>
@@ -107,17 +107,18 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    // Финальный прокси-адрес
+    // Твой прокси в Cloudflare
     const proxyUrl = "https://dry-unit-8e71.dimitriykor321.workers.dev/"; 
 
     const firebaseConfig = { 
         databaseURL: proxyUrl 
     };
     
-    firebase.initializeApp(firebaseConfig);
+    // Безопасная инициализация
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
-
-    // Оптимизация соединения
     db.goOnline();
 
     let myUin = localStorage.getItem('asik_uin');
@@ -125,44 +126,53 @@
     let selectedMsgId = null;
     let mediaRecorder, audioChunks = [];
 
+    // Проверка авторизации при загрузке
     if(myUin) {
         document.getElementById('auth-screen').style.display = 'none';
         startApp();
     }
 
     async function handleAuth() {
-        const uin = document.getElementById('auth-uin').value.trim();
-        const passRaw = document.getElementById('auth-pass').value.trim();
+        const uinInput = document.getElementById('auth-uin');
+        const passInput = document.getElementById('auth-pass');
         const err = document.getElementById('auth-error');
         
+        const uin = uinInput.value.trim();
+        const passRaw = passInput.value.trim();
+        
         if(!uin || passRaw.length < 4) {
-            err.innerText = "UIN и пароль (4+) обязательны!";
+            err.innerText = "Нужен UIN и пароль (мин. 4 символа)!";
             return;
         }
 
         const pass = btoa(passRaw);
-        err.innerText = "Устанавливаю связь...";
+        err.style.color = "var(--primary)";
+        err.innerText = "Подключаюсь к ASIK...";
 
         try {
-            // Используем .json() для прокси-запроса через Firebase SDK
+            // Запрашиваем данные пользователя через мост
             const snap = await db.ref('users_auth/' + uin).once('value');
-            if(snap.exists()) {
-                if(snap.val().pass === pass) {
+            const userData = snap.val();
+
+            if(userData) {
+                if(userData.pass === pass) {
                     login(uin);
                 } else {
-                    err.innerText = "Ошибка: Пароль не подошел.";
+                    err.style.color = "var(--danger)";
+                    err.innerText = "Ошибка: Пароль неверный!";
                 }
             } else {
-                if(confirm("UIN " + uin + " не найден. Создать новый аккаунт?")) {
-                    await db.ref('users_auth/' + uin).set({ pass });
+                if(confirm("UIN " + uin + " не найден. Зарегистрировать?")) {
+                    await db.ref('users_auth/' + uin).set({ pass: pass });
                     login(uin);
                 } else {
                     err.innerText = "";
                 }
             }
         } catch(e) {
-            err.innerText = "Сбой моста. Проверь 'Save and Deploy' в Cloudflare.";
-            console.error("Ошибка Firebase через прокси:", e);
+            err.style.color = "var(--danger)";
+            err.innerText = "Сбой связи. Проверь Cloudflare!";
+            console.error(e);
         }
     }
 
@@ -175,7 +185,8 @@
 
     function startApp() {
         db.ref(`profiles/${myUin}/avatar`).on('value', snap => {
-            if(snap.val()) document.getElementById('my-avatar').innerHTML = `<img src="${snap.val()}">`;
+            const avatarBox = document.getElementById('my-avatar');
+            if(snap.val()) avatarBox.innerHTML = `<img src="${snap.val()}">`;
         });
         loadFriends();
     }
@@ -210,6 +221,7 @@
                 const data = child.val();
                 const div = document.createElement('div');
                 div.className = `msg-bubble ${data.from == myUin ? 'me' : 'them'}`;
+                
                 div.oncontextmenu = (e) => {
                     e.preventDefault();
                     selectedMsgId = { chatId, msgId: child.key };
@@ -252,7 +264,7 @@
                     reader.onloadend = () => sendMessage({ voice: reader.result });
                 };
                 mediaRecorder.start(); btn.classList.add('recording');
-            } catch(e) { alert("Нет доступа к микрофону"); }
+            } catch(e) { alert("Ошибка: Микрофон заблокирован"); }
         } else { mediaRecorder.stop(); btn.classList.remove('recording'); }
     }
 
@@ -262,18 +274,26 @@
     }
 
     function addFriend() {
-        const uin = prompt("UIN друга:"); const name = prompt("Имя:");
+        const uin = prompt("Введите UIN друга:"); const name = prompt("Как его назвать?");
         if(uin && name) db.ref(`user_contacts/${myUin}/${uin}`).set(name);
     }
 
     function updateAvatar() {
-        const url = prompt("Ссылка на фото:");
+        const url = prompt("Вставьте прямую ссылку на картинку:");
         if(url) db.ref(`profiles/${myUin}`).set({ avatar: url });
     }
 
     function closeChat() { document.getElementById('chat-window').classList.remove('active'); }
+    
+    // Глобальные клики
     window.onclick = () => document.getElementById('msgMenu').style.display = 'none';
-    document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+    
+    // Обработка клавиш
+    document.getElementById('msgInput').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') sendMessage();
+    });
+
+    // Обработка файлов
     document.getElementById('fileInput').onchange = (e) => {
         const reader = new FileReader();
         reader.readAsDataURL(e.target.files[0]);
