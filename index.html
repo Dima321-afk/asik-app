@@ -2,70 +2,159 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK ∞ Voice</title>
+    <title>ASIK ∞ Ultimate</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <style>
-        /* Все предыдущие стили сохраняются, добавляем новые для голоса */
         :root {
             --primary: #00a884;
             --bg-dark: #0b141a;
             --bg-sidebar: #111b21;
             --text-main: #e9edef;
+            --text-muted: #8696a0;
             --my-msg: #005c4b;
             --their-msg: #202c33;
-            --record-active: #ff4757;
+            --accent: #00f2ff;
+            --danger: #ff4b4b;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark); color: var(--text-main);
+            overflow: hidden;
+        }
+
         .app-container { display: flex; width: 100vw; height: 100vh; }
-        .sidebar { width: 100%; max-width: 400px; background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
-        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .contact-item { padding: 12px 16px; display: flex; align-items: center; gap: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-        .chat-view { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-dark); position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s; z-index: 10; }
+        /* Сайдбар */
+        .sidebar {
+            width: 100%; max-width: 400px; height: 100%;
+            background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; z-index: 5;
+        }
+
+        .header {
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-sidebar); border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .contact-item {
+            padding: 12px 16px; display: flex; align-items: center; gap: 15px;
+            cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .contact-item:hover { background: rgba(255,255,255,0.05); }
+
+        .avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: linear-gradient(45deg, #222, #444);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; overflow: hidden; border: 2px solid var(--primary);
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Окно чата */
+        .chat-view {
+            flex-grow: 1; display: flex; flex-direction: column;
+            background: var(--bg-dark); position: absolute; left: 0; top: 0;
+            width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
         .chat-view.active { transform: translateX(0); }
-        .chat-header { padding: 10px 16px; background: var(--bg-sidebar); display: flex; align-items: center; gap: 12px; }
-        
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
-        
-        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.3); word-wrap: break-word; }
-        .msg-bubble.me { align-self: flex-end; background: var(--my-msg); }
-        .msg-bubble.them { align-self: flex-start; background: var(--their-msg); }
 
-        .input-area { padding: 10px 15px; background: var(--bg-sidebar); display: flex; align-items: center; gap: 10px; }
-        #msgInput { flex-grow: 1; border: none; padding: 12px 18px; border-radius: 25px; background: #2a3942; color: white; outline: none; }
+        #messages {
+            flex-grow: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 10px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-blend-mode: overlay; background-color: var(--bg-dark);
+        }
 
-        .btn { background: none; border: none; color: #8696a0; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .btn-record.active { color: var(--record-active); transform: scale(1.2); filter: drop-shadow(0 0 5px var(--record-active)); }
+        .msg-bubble {
+            max-width: 75%; padding: 10px 14px; border-radius: 12px;
+            font-size: 0.95rem; position: relative; cursor: context-menu;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .msg-bubble:active { opacity: 0.8; }
+        .msg-bubble.me { align-self: flex-end; background: var(--my-msg); border-bottom-right-radius: 2px; }
+        .msg-bubble.them { align-self: flex-start; background: var(--their-msg); border-bottom-left-radius: 2px; }
+
+        /* Ввод сообщения */
+        .input-area {
+            padding: 10px 15px; background: var(--bg-sidebar);
+            display: flex; align-items: center; gap: 8px;
+        }
         
-        audio { height: 35px; max-width: 220px; filter: invert(100%) hue-rotate(180deg) brightness(1.5); margin-top: 5px; }
-        .msg-img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        #msgInput {
+            flex-grow: 1; border: none; padding: 12px 18px;
+            border-radius: 25px; background: #2a3942;
+            color: #fff; outline: none; font-size: 1rem;
+        }
 
-        @media (min-width: 768px) { .chat-view { position: relative; transform: translateX(0); } .sidebar { width: 350px; } .back-btn { display: none; } }
+        .btn-action { 
+            width: 42px; height: 42px; border-radius: 50%;
+            border: none; background: none; color: var(--text-muted);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; transition: 0.3s;
+        }
+        .btn-action:hover { background: rgba(255,255,255,0.05); }
+        .btn-send { color: var(--primary); }
+        .btn-record.recording { color: var(--danger); animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        audio { height: 35px; width: 220px; margin-top: 5px; filter: invert(1); }
+
+        /* Контекстное меню для удаления */
+        #msgMenu {
+            position: fixed; background: #222; border: 1px solid #444;
+            border-radius: 8px; display: none; z-index: 1000; padding: 5px;
+        }
+        #msgMenu button { 
+            display: block; width: 100%; border: none; background: none; 
+            color: white; padding: 8px 15px; text-align: left; cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .chat-view { position: relative; transform: translateX(0); }
+            .sidebar { width: 380px; }
+            .back-btn { display: none; }
+        }
     </style>
 </head>
 <body>
 
+<div id="msgMenu">
+    <button onclick="deleteMessage()">🗑 Удалить у всех</button>
+</div>
+
 <div class="app-container">
     <div class="sidebar">
-        <div class="header"><h3>ASIK ∞</h3><button class="btn" onclick="addContact()">👤+</button></div>
+        <div class="header">
+            <div class="avatar" onclick="updateProfile()" id="my-avatar">?</div>
+            <h2 style="color: var(--primary); margin:0;">ASIK ∞</h2>
+            <button class="btn-action" onclick="addContact()">👤+</button>
+        </div>
         <div id="contact-list"></div>
     </div>
+
     <div class="chat-view" id="chat-window">
-        <div class="chat-header">
-            <button class="btn back-btn" onclick="closeChat()">←</button>
+        <div class="chat-header" style="display:flex; padding: 10px 16px; background: var(--bg-sidebar); align-items:center; gap:12px;">
+            <button class="btn-action back-btn" onclick="closeChat()">←</button>
             <div class="avatar" id="chat-avatar">?</div>
-            <div id="chat-title" style="font-weight: 600;">Чат</div>
+            <div>
+                <div id="chat-title" style="font-weight: 600;">Чат</div>
+                <div id="typing-status" style="font-size:0.8rem; color:var(--primary); height:12px;"></div>
+            </div>
         </div>
+        
         <div id="messages"></div>
+
         <div class="input-area">
             <input type="file" id="fileInput" hidden accept="image/*">
-            <button class="btn" onclick="document.getElementById('fileInput').click()">📎</button>
-            <input type="text" id="msgInput" placeholder="Сообщение...">
-            <button class="btn btn-record" id="recordBtn" onclick="toggleRecord()">🎙️</button>
-            <button class="btn" onclick="sendMessage()" style="color:var(--primary)">➤</button>
+            <button class="btn-action" onclick="document.getElementById('fileInput').click()">📎</button>
+            <input type="text" id="msgInput" placeholder="Сообщение..." autocomplete="off">
+            <button class="btn-action btn-record" id="recordBtn" onclick="toggleVoice()">🎙️</button>
+            <button class="btn-action btn-send" onclick="sendMessage()">➤</button>
         </div>
     </div>
 </div>
@@ -79,105 +168,137 @@
     const db = firebase.database();
 
     let myUin = localStorage.getItem('asik_saved_uin') || prompt("Ваш UIN:");
-    if (myUin) localStorage.setItem('asik_saved_uin', myUin); else location.reload();
+    if (myUin) {
+        localStorage.setItem('asik_saved_uin', myUin);
+    } else { location.reload(); }
 
     let currentTarget = null;
-    let contacts = {};
+    let selectedMsgId = null;
     let mediaRecorder;
     let audioChunks = [];
 
-    // Загрузка контактов
-    db.ref('user_contacts/' + myUin).on('value', snap => {
-        contacts = snap.val() || { "000": "✨ Заметки" };
-        renderContacts();
+    // Загрузка своего профиля
+    db.ref('profiles/' + myUin).on('value', snap => {
+        const p = snap.val();
+        if (p && p.avatar) document.getElementById('my-avatar').innerHTML = `<img src="${p.avatar}">`;
     });
 
-    function renderContacts() {
-        const list = document.getElementById('contact-list'); list.innerHTML = "";
+    // Список контактов (из Облака)
+    db.ref('user_contacts/' + myUin).on('value', snap => {
+        const contacts = snap.val() || {};
+        const list = document.getElementById('contact-list');
+        list.innerHTML = "";
         Object.keys(contacts).forEach(uin => {
             const item = document.createElement('div');
             item.className = 'contact-item';
-            item.innerHTML = `<div class="avatar">${contacts[uin][0]}</div><div><b>${contacts[uin]}</b><br><small>UIN: ${uin}</small></div>`;
+            item.innerHTML = `<div class="avatar">${contacts[uin][0]}</div><div><b>${contacts[uin]}</b><br><small style="color:var(--text-muted)">UIN: ${uin}</small></div>`;
             item.onclick = () => openChat(uin, contacts[uin]);
             list.appendChild(item);
         });
-    }
+    });
 
     function openChat(uin, name) {
         currentTarget = uin;
         document.getElementById('chat-window').classList.add('active');
         document.getElementById('chat-title').innerText = name;
         document.getElementById('chat-avatar').innerText = name[0];
+        
         const chatId = uin === '000' ? `notes_${myUin}` : [myUin, uin].sort().join("_");
-        const msgBox = document.getElementById('messages'); msgBox.innerHTML = "";
-        db.ref("private_chats/" + chatId).off();
-        db.ref("private_chats/" + chatId).on("child_added", snap => appendMessage(snap.val()));
-    }
-
-    function appendMessage(data) {
         const msgBox = document.getElementById('messages');
-        const div = document.createElement('div');
-        div.className = `msg-bubble ${data.from == myUin ? 'me' : 'them'}`;
-        
-        let html = `<div>${data.text || ''}</div>`;
-        if (data.image) html += `<img src="${data.image}" class="msg-img">`;
-        if (data.voice) html += `<audio controls src="${data.voice}"></audio>`;
-        
-        div.innerHTML = html;
-        msgBox.appendChild(div);
-        msgBox.scrollTop = msgBox.scrollHeight;
+        msgBox.innerHTML = "";
+
+        db.ref("private_chats/" + chatId).off();
+        db.ref("private_chats/" + chatId).on("value", snap => {
+            msgBox.innerHTML = "";
+            snap.forEach(child => {
+                const data = child.val();
+                const id = child.key;
+                const div = document.createElement('div');
+                div.className = `msg-bubble ${data.from == myUin ? 'me' : 'them'}`;
+                div.oncontextmenu = (e) => showMsgMenu(e, id, chatId);
+                
+                let html = `<div>${data.text || ''}</div>`;
+                if (data.image) html += `<img src="${data.image}" style="max-width:100%; border-radius:8px; margin-top:5px;">`;
+                if (data.voice) html += `<audio controls src="${data.voice}"></audio>`;
+                
+                div.innerHTML = html + `<div style="font-size:0.6rem; text-align:right; margin-top:4px; opacity:0.5">${new Date(data.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+                msgBox.appendChild(div);
+            });
+            msgBox.scrollTop = msgBox.scrollHeight;
+        });
     }
 
     function sendMessage(extras = {}) {
         const input = document.getElementById('msgInput');
-        const text = input.value.trim();
-        if ((text || extras.image || extras.voice) && currentTarget) {
+        if ((input.value.trim() || extras.image || extras.voice) && currentTarget) {
             const chatId = currentTarget === '000' ? `notes_${myUin}` : [myUin, currentTarget].sort().join("_");
             db.ref("private_chats/" + chatId).push().set({
-                from: myUin, text: text, time: Date.now(), ...extras
+                from: myUin, text: input.value.trim(), time: Date.now(), ...extras
             });
             input.value = "";
         }
     }
 
-    // --- ЛОГИКА ГОЛОСОВЫХ ---
-    async function toggleRecord() {
+    // Голосовые сообщения
+    async function toggleVoice() {
         const btn = document.getElementById('recordBtn');
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
-            
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
                 const reader = new FileReader();
-                reader.readAsDataURL(audioBlob);
+                reader.readAsDataURL(blob);
                 reader.onloadend = () => sendMessage({ voice: reader.result });
-                stream.getTracks().forEach(t => t.stop());
             };
-            
             mediaRecorder.start();
-            btn.classList.add('active');
+            btn.classList.add('recording');
         } else {
             mediaRecorder.stop();
-            btn.classList.remove('active');
+            btn.classList.remove('recording');
         }
     }
 
-    document.getElementById('fileInput').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => sendMessage({ image: ev.target.result });
-        reader.readAsDataURL(e.target.files[0]);
-    };
+    // Удаление сообщений
+    function showMsgMenu(e, id, chatId) {
+        e.preventDefault();
+        selectedMsgId = { id, chatId };
+        const menu = document.getElementById('msgMenu');
+        menu.style.display = 'block';
+        menu.style.left = e.pageX + 'px';
+        menu.style.top = e.pageY + 'px';
+    }
+
+    function deleteMessage() {
+        if (selectedMsgId) {
+            db.ref(`private_chats/${selectedMsgId.chatId}/${selectedMsgId.id}`).remove();
+            document.getElementById('msgMenu').style.display = 'none';
+        }
+    }
+
+    window.onclick = () => document.getElementById('msgMenu').style.display = 'none';
+
+    // Обновление профиля (Аватарка)
+    function updateProfile() {
+        const imgUrl = prompt("Вставьте прямую ссылку на фото для аватарки:");
+        if (imgUrl) db.ref('profiles/' + myUin).set({ avatar: imgUrl });
+    }
 
     function addContact() {
-        const uin = prompt("UIN:"); const name = prompt("Имя:");
+        const uin = prompt("UIN друга:");
+        const name = prompt("Имя:");
         if (uin && name) db.ref(`user_contacts/${myUin}/${uin}`).set(name);
     }
 
     function closeChat() { document.getElementById('chat-window').classList.remove('active'); }
     document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+    document.getElementById('fileInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(e.target.files[0]);
+        reader.onload = () => sendMessage({ image: reader.result });
+    };
 </script>
 </body>
 </html>
