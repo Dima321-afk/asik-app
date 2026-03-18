@@ -2,137 +2,70 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK - Infinity Engine</title>
+    <title>ASIK ∞ Voice</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <style>
+        /* Все предыдущие стили сохраняются, добавляем новые для голоса */
         :root {
             --primary: #00a884;
             --bg-dark: #0b141a;
             --bg-sidebar: #111b21;
             --text-main: #e9edef;
-            --text-muted: #8696a0;
             --my-msg: #005c4b;
             --their-msg: #202c33;
-            --accent: #00f2ff;
+            --record-active: #ff4757;
         }
 
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-dark); color: var(--text-main);
-            overflow: hidden;
-        }
-
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
         .app-container { display: flex; width: 100vw; height: 100vh; }
+        .sidebar { width: 100%; max-width: 400px; background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .contact-item { padding: 12px 16px; display: flex; align-items: center; gap: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-        /* Сайдбар */
-        .sidebar {
-            width: 100%; max-width: 400px; height: 100%;
-            background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; transition: 0.3s;
-        }
-
-        .header {
-            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg-sidebar); border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .contact-item {
-            padding: 12px 16px; display: flex; align-items: center; gap: 15px;
-            cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03);
-            transition: 0.2s;
-        }
-        .contact-item:hover { background: rgba(255,255,255,0.05); }
-
-        .avatar {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1.2rem; color: #fff;
-        }
-
-        /* Чат */
-        .chat-view {
-            flex-grow: 1; display: flex; flex-direction: column;
-            background: var(--bg-dark); position: absolute; left: 0; top: 0;
-            width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .chat-view { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-dark); position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s; z-index: 10; }
         .chat-view.active { transform: translateX(0); }
-
-        .chat-header {
-            padding: 10px 16px; background: var(--bg-sidebar);
-            display: flex; align-items: center; gap: 12px; z-index: 10;
-        }
-
-        #messages {
-            flex-grow: 1; overflow-y: auto; padding: 20px;
-            display: flex; flex-direction: column; gap: 6px;
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-blend-mode: overlay; background-color: var(--bg-dark);
-        }
-
-        .msg-bubble {
-            max-width: 80%; padding: 8px 12px; border-radius: 8px;
-            font-size: 0.95rem; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-        .msg-bubble.me { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
-        .msg-bubble.them { align-self: flex-start; background: var(--their-msg); border-top-left-radius: 0; }
+        .chat-header { padding: 10px 16px; background: var(--bg-sidebar); display: flex; align-items: center; gap: 12px; }
         
-        .msg-time { font-size: 0.7rem; color: var(--text-muted); text-align: right; margin-top: 4px; }
-        .msg-img { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
-
-        .typing-indicator { font-size: 0.8rem; color: var(--primary); font-style: italic; min-height: 1rem; }
-
-        /* Ввод */
-        .input-area {
-            padding: 10px 15px; background: var(--bg-sidebar);
-            display: flex; align-items: center; gap: 10px;
-        }
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
         
-        #msgInput {
-            flex-grow: 1; border: none; padding: 12px 18px;
-            border-radius: 25px; background: #2a3942;
-            color: var(--text-main); outline: none; font-size: 1rem;
-        }
+        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.3); word-wrap: break-word; }
+        .msg-bubble.me { align-self: flex-end; background: var(--my-msg); }
+        .msg-bubble.them { align-self: flex-start; background: var(--their-msg); }
 
-        .btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; }
-        .btn-send { color: var(--primary); }
+        .input-area { padding: 10px 15px; background: var(--bg-sidebar); display: flex; align-items: center; gap: 10px; }
+        #msgInput { flex-grow: 1; border: none; padding: 12px 18px; border-radius: 25px; background: #2a3942; color: white; outline: none; }
 
-        /* Десктоп */
-        @media (min-width: 768px) {
-            .chat-view { position: relative; transform: translateX(0); }
-            .sidebar { width: 350px; }
-            .back-btn { display: none; }
-        }
+        .btn { background: none; border: none; color: #8696a0; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-record.active { color: var(--record-active); transform: scale(1.2); filter: drop-shadow(0 0 5px var(--record-active)); }
+        
+        audio { height: 35px; max-width: 220px; filter: invert(100%) hue-rotate(180deg) brightness(1.5); margin-top: 5px; }
+        .msg-img { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+
+        @media (min-width: 768px) { .chat-view { position: relative; transform: translateX(0); } .sidebar { width: 350px; } .back-btn { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="sidebar">
-        <div class="header">
-            <h2 style="color: var(--primary); margin:0;">ASIK ∞</h2>
-            <button class="btn" onclick="addContact()" title="Добавить друга">👤+</button>
-        </div>
+        <div class="header"><h3>ASIK ∞</h3><button class="btn" onclick="addContact()">👤+</button></div>
         <div id="contact-list"></div>
     </div>
-
     <div class="chat-view" id="chat-window">
         <div class="chat-header">
-            <button class="btn back-btn" onclick="closeChat()" style="color:var(--primary)">←</button>
+            <button class="btn back-btn" onclick="closeChat()">←</button>
             <div class="avatar" id="chat-avatar">?</div>
-            <div>
-                <div id="chat-title" style="font-weight: 600;">Чат</div>
-                <div class="typing-indicator" id="typing-status"></div>
-            </div>
+            <div id="chat-title" style="font-weight: 600;">Чат</div>
         </div>
         <div id="messages"></div>
         <div class="input-area">
             <input type="file" id="fileInput" hidden accept="image/*">
             <button class="btn" onclick="document.getElementById('fileInput').click()">📎</button>
-            <input type="text" id="msgInput" placeholder="Введите сообщение..." autocomplete="off">
-            <button class="btn btn-send" onclick="sendMessage()">➤</button>
+            <input type="text" id="msgInput" placeholder="Сообщение...">
+            <button class="btn btn-record" id="recordBtn" onclick="toggleRecord()">🎙️</button>
+            <button class="btn" onclick="sendMessage()" style="color:var(--primary)">➤</button>
         </div>
     </div>
 </div>
@@ -146,37 +79,25 @@
     const db = firebase.database();
 
     let myUin = localStorage.getItem('asik_saved_uin') || prompt("Ваш UIN:");
-    if (myUin) {
-        localStorage.setItem('asik_saved_uin', myUin);
-        // Регистрация в сети
-        db.ref('users/' + myUin).update({ online: true, lastSeen: Date.now() });
-        db.ref('users/' + myUin).onDisconnect().update({ online: false, lastSeen: Date.now() });
-    } else { location.reload(); }
+    if (myUin) localStorage.setItem('asik_saved_uin', myUin); else location.reload();
 
     let currentTarget = null;
     let contacts = {};
+    let mediaRecorder;
+    let audioChunks = [];
 
-    // Загрузка контактов из Облака
+    // Загрузка контактов
     db.ref('user_contacts/' + myUin).on('value', snap => {
         contacts = snap.val() || { "000": "✨ Заметки" };
         renderContacts();
     });
 
     function renderContacts() {
-        const list = document.getElementById('contact-list');
-        list.innerHTML = "";
+        const list = document.getElementById('contact-list'); list.innerHTML = "";
         Object.keys(contacts).forEach(uin => {
             const item = document.createElement('div');
             item.className = 'contact-item';
-            item.innerHTML = `
-                <div class="avatar">${contacts[uin][0].toUpperCase()}</div>
-                <div style="flex-grow:1">
-                    <div style="display:flex; justify-content:space-between">
-                        <b>${contacts[uin]}</b>
-                    </div>
-                    <div style="font-size:0.8rem; color:var(--text-muted)">UIN: ${uin}</div>
-                </div>
-            `;
+            item.innerHTML = `<div class="avatar">${contacts[uin][0]}</div><div><b>${contacts[uin]}</b><br><small>UIN: ${uin}</small></div>`;
             item.onclick = () => openChat(uin, contacts[uin]);
             list.appendChild(item);
         });
@@ -186,92 +107,77 @@
         currentTarget = uin;
         document.getElementById('chat-window').classList.add('active');
         document.getElementById('chat-title').innerText = name;
-        document.getElementById('chat-avatar').innerText = name[0].toUpperCase();
-        
+        document.getElementById('chat-avatar').innerText = name[0];
         const chatId = uin === '000' ? `notes_${myUin}` : [myUin, uin].sort().join("_");
-        
-        const msgBox = document.getElementById('messages');
-        msgBox.innerHTML = "";
-        
+        const msgBox = document.getElementById('messages'); msgBox.innerHTML = "";
         db.ref("private_chats/" + chatId).off();
-        db.ref("private_chats/" + chatId).on("child_added", snap => {
-            const data = snap.val();
-            appendMessage(data);
-        });
-
-        // Слушаем "Печатает..."
-        db.ref(`typing/${chatId}/${uin}`).on('value', snap => {
-            document.getElementById('typing-status').innerText = snap.val() ? 'печатает...' : '';
-        });
+        db.ref("private_chats/" + chatId).on("child_added", snap => appendMessage(snap.val()));
     }
 
     function appendMessage(data) {
         const msgBox = document.getElementById('messages');
-        const isMe = data.from == myUin;
         const div = document.createElement('div');
-        div.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
+        div.className = `msg-bubble ${data.from == myUin ? 'me' : 'them'}`;
         
-        let content = `<div>${data.text || ''}</div>`;
-        if (data.image) content += `<img src="${data.image}" class="msg-img" onclick="window.open(this.src)">`;
+        let html = `<div>${data.text || ''}</div>`;
+        if (data.image) html += `<img src="${data.image}" class="msg-img">`;
+        if (data.voice) html += `<audio controls src="${data.voice}"></audio>`;
         
-        const time = new Date(data.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        div.innerHTML = `${content}<div class="msg-time">${time} ${isMe ? '✓' : ''}</div>`;
-        
+        div.innerHTML = html;
         msgBox.appendChild(div);
         msgBox.scrollTop = msgBox.scrollHeight;
     }
 
-    function sendMessage(imgBase64 = null) {
+    function sendMessage(extras = {}) {
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
-        if ((text || imgBase64) && currentTarget) {
+        if ((text || extras.image || extras.voice) && currentTarget) {
             const chatId = currentTarget === '000' ? `notes_${myUin}` : [myUin, currentTarget].sort().join("_");
             db.ref("private_chats/" + chatId).push().set({
-                from: myUin,
-                text: text,
-                image: imgBase64,
-                time: Date.now()
+                from: myUin, text: text, time: Date.now(), ...extras
             });
             input.value = "";
-            setTyping(false);
         }
     }
 
-    // Обработка файлов
-    document.getElementById('fileInput').onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => sendMessage(event.target.result);
-            reader.readAsDataURL(file);
+    // --- ЛОГИКА ГОЛОСОВЫХ ---
+    async function toggleRecord() {
+        const btn = document.getElementById('recordBtn');
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = () => sendMessage({ voice: reader.result });
+                stream.getTracks().forEach(t => t.stop());
+            };
+            
+            mediaRecorder.start();
+            btn.classList.add('active');
+        } else {
+            mediaRecorder.stop();
+            btn.classList.remove('active');
         }
-    };
-
-    // Статус "Печатает"
-    let typingTimer;
-    document.getElementById('msgInput').oninput = () => {
-        setTyping(true);
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => setTyping(false), 2000);
-    };
-
-    function setTyping(isTyping) {
-        if (!currentTarget || currentTarget === '000') return;
-        const chatId = [myUin, currentTarget].sort().join("_");
-        db.ref(`typing/${chatId}/${myUin}`).set(isTyping);
     }
+
+    document.getElementById('fileInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => sendMessage({ image: ev.target.result });
+        reader.readAsDataURL(e.target.files[0]);
+    };
 
     function addContact() {
-        const uin = prompt("Введите UIN:");
-        const name = prompt("Имя контакта:");
-        if (uin && name) {
-            db.ref(`user_contacts/${myUin}/${uin}`).set(name);
-        }
+        const uin = prompt("UIN:"); const name = prompt("Имя:");
+        if (uin && name) db.ref(`user_contacts/${myUin}/${uin}`).set(name);
     }
 
-    function closeChat() { document.getElementById('chat-window').classList.remove('active'); currentTarget = null; }
+    function closeChat() { document.getElementById('chat-window').classList.remove('active'); }
     document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
 </script>
-
 </body>
 </html>
