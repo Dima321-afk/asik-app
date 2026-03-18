@@ -67,7 +67,7 @@
         <input type="text" id="auth-uin" class="auth-input" placeholder="Ваш UIN">
         <input type="password" id="auth-pass" class="auth-input" placeholder="Пароль">
         <button class="auth-btn" onclick="handleAuth()">ВОЙТИ / СОЗДАТЬ</button>
-        <div id="auth-error" style="color:var(--danger); font-size:0.7rem; height:10px;"></div>
+        <div id="auth-error" style="color:var(--danger); font-size:0.7rem; margin-top:10px; min-height:15px;"></div>
     </div>
 </div>
 
@@ -107,8 +107,8 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    // Твой персональный мост через Cloudflare Workers
-    const proxyUrl = "https://dry-unit-8e71.dimitriykor321.workers.dev"; 
+    // Финальный прокси-адрес
+    const proxyUrl = "https://dry-unit-8e71.dimitriykor321.workers.dev/"; 
 
     const firebaseConfig = { 
         databaseURL: proxyUrl 
@@ -117,8 +117,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Оптимизация под глушилки и офлайн режим
-    db.ref().keepSynced(true);
+    // Оптимизация соединения
     db.goOnline();
 
     let myUin = localStorage.getItem('asik_uin');
@@ -133,19 +132,37 @@
 
     async function handleAuth() {
         const uin = document.getElementById('auth-uin').value.trim();
-        const pass = btoa(document.getElementById('auth-pass').value.trim());
+        const passRaw = document.getElementById('auth-pass').value.trim();
         const err = document.getElementById('auth-error');
-        if(!uin || pass.length < 4) return err.innerText = "UIN и пароль (4+) обязательны!";
+        
+        if(!uin || passRaw.length < 4) {
+            err.innerText = "UIN и пароль (4+) обязательны!";
+            return;
+        }
 
-        const snap = await db.ref('users_auth/' + uin).once('value');
-        if(snap.exists()) {
-            if(snap.val().pass === pass) login(uin);
-            else err.innerText = "Неверный пароль!";
-        } else {
-            if(confirm("Создать новый аккаунт?")) {
-                await db.ref('users_auth/' + uin).set({ pass });
-                login(uin);
+        const pass = btoa(passRaw);
+        err.innerText = "Устанавливаю связь...";
+
+        try {
+            // Используем .json() для прокси-запроса через Firebase SDK
+            const snap = await db.ref('users_auth/' + uin).once('value');
+            if(snap.exists()) {
+                if(snap.val().pass === pass) {
+                    login(uin);
+                } else {
+                    err.innerText = "Ошибка: Пароль не подошел.";
+                }
+            } else {
+                if(confirm("UIN " + uin + " не найден. Создать новый аккаунт?")) {
+                    await db.ref('users_auth/' + uin).set({ pass });
+                    login(uin);
+                } else {
+                    err.innerText = "";
+                }
             }
+        } catch(e) {
+            err.innerText = "Сбой моста. Проверь 'Save and Deploy' в Cloudflare.";
+            console.error("Ошибка Firebase через прокси:", e);
         }
     }
 
@@ -224,16 +241,18 @@
     async function toggleVoice() {
         const btn = document.getElementById('recordBtn');
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const reader = new FileReader();
-                reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/webm' }));
-                reader.onloadend = () => sendMessage({ voice: reader.result });
-            };
-            mediaRecorder.start(); btn.classList.add('recording');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/webm' }));
+                    reader.onloadend = () => sendMessage({ voice: reader.result });
+                };
+                mediaRecorder.start(); btn.classList.add('recording');
+            } catch(e) { alert("Нет доступа к микрофону"); }
         } else { mediaRecorder.stop(); btn.classList.remove('recording'); }
     }
 
@@ -248,7 +267,7 @@
     }
 
     function updateAvatar() {
-        const url = prompt("Ссылка на фото для авы:");
+        const url = prompt("Ссылка на фото:");
         if(url) db.ref(`profiles/${myUin}`).set({ avatar: url });
     }
 
