@@ -2,119 +2,104 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK - Next Gen</title>
+    <title>ASIK - Infinity Engine</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <style>
         :root {
-            --primary: #0088cc; /* Цвет а-ля Telegram */
-            --bg-main: #ffffff;
-            --bg-chat: #f0f2f5;
-            --text-dark: #1c1e21;
-            --text-gray: #65676b;
-            --my-msg: #e1ffc7;
-            --their-msg: #ffffff;
-        }
-
-        /* Темная тема по умолчанию для стиля "по кайфу" */
-        [data-theme="dark"] {
-            --bg-main: #18191a;
-            --bg-chat: #0b141a;
-            --text-dark: #e4e6eb;
-            --text-gray: #b0b3b8;
+            --primary: #00a884;
+            --bg-dark: #0b141a;
+            --bg-sidebar: #111b21;
+            --text-main: #e9edef;
+            --text-muted: #8696a0;
             --my-msg: #005c4b;
             --their-msg: #202c33;
-            --primary: #00a884;
+            --accent: #00f2ff;
         }
 
         body, html { 
             margin: 0; padding: 0; height: 100%; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-main); color: var(--text-dark);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark); color: var(--text-main);
             overflow: hidden;
         }
 
-        .app-container {
-            display: flex; width: 100vw; height: 100vh; position: relative;
-        }
+        .app-container { display: flex; width: 100vw; height: 100vh; }
 
-        /* Список чатов */
+        /* Сайдбар */
         .sidebar {
             width: 100%; max-width: 400px; height: 100%;
-            background: var(--bg-main); border-right: 1px solid rgba(0,0,0,0.1);
-            display: flex; flex-direction: column;
-            z-index: 2;
+            background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; transition: 0.3s;
         }
 
         .header {
-            padding: 16px; display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg-main); font-weight: bold; font-size: 1.2rem;
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-sidebar); border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .contact-item {
-            padding: 12px 16px; display: flex; align-items: center; gap: 12px;
-            cursor: pointer; transition: background 0.2s; border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 12px 16px; display: flex; align-items: center; gap: 15px;
+            cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: 0.2s;
         }
-        .contact-item:hover { background: rgba(0,0,0,0.03); }
-        
+        .contact-item:hover { background: rgba(255,255,255,0.05); }
+
         .avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: var(--primary); color: white;
-            display: flex; align-items: center; justify-content: center; font-weight: bold;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.2rem; color: #fff;
         }
 
-        /* Окно чата */
+        /* Чат */
         .chat-view {
             flex-grow: 1; display: flex; flex-direction: column;
-            background: var(--bg-chat); position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; transition: transform 0.3s ease;
-            transform: translateX(100%); z-index: 5;
+            background: var(--bg-dark); position: absolute; left: 0; top: 0;
+            width: 100%; height: 100%; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .chat-view.active { transform: translateX(0); }
 
         .chat-header {
-            padding: 10px 16px; background: var(--bg-main); 
-            display: flex; align-items: center; gap: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 10px 16px; background: var(--bg-sidebar);
+            display: flex; align-items: center; gap: 12px; z-index: 10;
         }
 
         #messages {
             flex-grow: 1; overflow-y: auto; padding: 20px;
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column; gap: 6px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-blend-mode: overlay; background-color: var(--bg-dark);
         }
 
         .msg-bubble {
-            max-width: 75%; padding: 8px 12px; border-radius: 12px;
-            font-size: 0.95rem; line-height: 1.4; position: relative;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-            word-wrap: break-word;
+            max-width: 80%; padding: 8px 12px; border-radius: 8px;
+            font-size: 0.95rem; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
-        .msg-bubble.me { 
-            align-self: flex-end; background: var(--my-msg); 
-            border-bottom-right-radius: 2px; 
-        }
-        .msg-bubble.them { 
-            align-self: flex-start; background: var(--their-msg); 
-            border-bottom-left-radius: 2px; 
-        }
+        .msg-bubble.me { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
+        .msg-bubble.them { align-self: flex-start; background: var(--their-msg); border-top-left-radius: 0; }
+        
+        .msg-time { font-size: 0.7rem; color: var(--text-muted); text-align: right; margin-top: 4px; }
+        .msg-img { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
 
+        .typing-indicator { font-size: 0.8rem; color: var(--primary); font-style: italic; min-height: 1rem; }
+
+        /* Ввод */
         .input-area {
-            padding: 10px 16px; background: var(--bg-main);
+            padding: 10px 15px; background: var(--bg-sidebar);
             display: flex; align-items: center; gap: 10px;
         }
         
-        input#msgInput {
-            flex-grow: 1; border: none; padding: 12px 16px;
-            border-radius: 24px; background: var(--bg-chat);
-            color: var(--text-dark); outline: none; font-size: 1rem;
+        #msgInput {
+            flex-grow: 1; border: none; padding: 12px 18px;
+            border-radius: 25px; background: #2a3942;
+            color: var(--text-main); outline: none; font-size: 1rem;
         }
 
-        .btn-round {
-            width: 40px; height: 40px; border-radius: 50%; border: none;
-            background: transparent; color: var(--primary); cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
+        .btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; }
+        .btn-send { color: var(--primary); }
 
-        /* Десктопная версия */
+        /* Десктоп */
         @media (min-width: 768px) {
             .chat-view { position: relative; transform: translateX(0); }
             .sidebar { width: 350px; }
@@ -122,28 +107,32 @@
         }
     </style>
 </head>
-<body data-theme="dark">
+<body>
 
 <div class="app-container">
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar">
         <div class="header">
-            <span>ASIK Messenger</span>
-            <button class="btn-round" onclick="addContact()">+</button>
+            <h2 style="color: var(--primary); margin:0;">ASIK ∞</h2>
+            <button class="btn" onclick="addContact()" title="Добавить друга">👤+</button>
         </div>
         <div id="contact-list"></div>
     </div>
 
     <div class="chat-view" id="chat-window">
         <div class="chat-header">
-            <button class="btn-round back-btn" onclick="closeChat()">←</button>
+            <button class="btn back-btn" onclick="closeChat()" style="color:var(--primary)">←</button>
             <div class="avatar" id="chat-avatar">?</div>
-            <div id="chat-title" style="font-weight: 600;">Выберите чат</div>
+            <div>
+                <div id="chat-title" style="font-weight: 600;">Чат</div>
+                <div class="typing-indicator" id="typing-status"></div>
+            </div>
         </div>
         <div id="messages"></div>
         <div class="input-area">
-            <button class="btn-round">📎</button>
-            <input type="text" id="msgInput" placeholder="Сообщение..." autocomplete="off">
-            <button class="btn-round" onclick="sendMessage()" style="color: var(--primary)">➤</button>
+            <input type="file" id="fileInput" hidden accept="image/*">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">📎</button>
+            <input type="text" id="msgInput" placeholder="Введите сообщение..." autocomplete="off">
+            <button class="btn btn-send" onclick="sendMessage()">➤</button>
         </div>
     </div>
 </div>
@@ -157,89 +146,131 @@
     const db = firebase.database();
 
     let myUin = localStorage.getItem('asik_saved_uin') || prompt("Ваш UIN:");
-    if (myUin) localStorage.setItem('asik_saved_uin', myUin); else location.reload();
+    if (myUin) {
+        localStorage.setItem('asik_saved_uin', myUin);
+        // Регистрация в сети
+        db.ref('users/' + myUin).update({ online: true, lastSeen: Date.now() });
+        db.ref('users/' + myUin).onDisconnect().update({ online: false, lastSeen: Date.now() });
+    } else { location.reload(); }
 
     let currentTarget = null;
-    let contactData = JSON.parse(localStorage.getItem('asik_contact_data') || '{"000": "Заметки"}');
+    let contacts = {};
 
-    // Отрисовка контактов (современный вид)
+    // Загрузка контактов из Облака
+    db.ref('user_contacts/' + myUin).on('value', snap => {
+        contacts = snap.val() || { "000": "✨ Заметки" };
+        renderContacts();
+    });
+
     function renderContacts() {
         const list = document.getElementById('contact-list');
         list.innerHTML = "";
-        Object.keys(contactData).forEach(uin => {
+        Object.keys(contacts).forEach(uin => {
             const item = document.createElement('div');
             item.className = 'contact-item';
             item.innerHTML = `
-                <div class="avatar">${contactData[uin][0]}</div>
+                <div class="avatar">${contacts[uin][0].toUpperCase()}</div>
                 <div style="flex-grow:1">
-                    <div style="font-weight:500">${contactData[uin]}</div>
-                    <div style="font-size:0.8rem; color:var(--text-gray)">ID: ${uin}</div>
+                    <div style="display:flex; justify-content:space-between">
+                        <b>${contacts[uin]}</b>
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-muted)">UIN: ${uin}</div>
                 </div>
             `;
-            item.onclick = () => openChat(uin, contactData[uin]);
+            item.onclick = () => openChat(uin, contacts[uin]);
             list.appendChild(item);
         });
     }
 
-    // Умное открытие чата
     function openChat(uin, name) {
         currentTarget = uin;
-        const view = document.getElementById('chat-window');
-        view.classList.add('active');
+        document.getElementById('chat-window').classList.add('active');
         document.getElementById('chat-title').innerText = name;
-        document.getElementById('chat-avatar').innerText = name[0];
+        document.getElementById('chat-avatar').innerText = name[0].toUpperCase();
         
         const chatId = uin === '000' ? `notes_${myUin}` : [myUin, uin].sort().join("_");
         
-        // Отписываемся от старых сообщений, чтобы не было дублей
-        db.ref("private_chats/" + chatId).off();
         const msgBox = document.getElementById('messages');
-        msgBox.innerHTML = ""; // Чистим один раз при входе
-
-        // Слушаем только новые сообщения и добавляем их в конец
+        msgBox.innerHTML = "";
+        
+        db.ref("private_chats/" + chatId).off();
         db.ref("private_chats/" + chatId).on("child_added", snap => {
             const data = snap.val();
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${data.from == myUin ? 'me' : 'them'}`;
-            div.innerText = data.text;
-            msgBox.appendChild(div);
-            msgBox.scrollTop = msgBox.scrollHeight;
+            appendMessage(data);
         });
+
+        // Слушаем "Печатает..."
+        db.ref(`typing/${chatId}/${uin}`).on('value', snap => {
+            document.getElementById('typing-status').innerText = snap.val() ? 'печатает...' : '';
+        });
+    }
+
+    function appendMessage(data) {
+        const msgBox = document.getElementById('messages');
+        const isMe = data.from == myUin;
+        const div = document.createElement('div');
+        div.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
         
-        document.getElementById('msgInput').focus();
+        let content = `<div>${data.text || ''}</div>`;
+        if (data.image) content += `<img src="${data.image}" class="msg-img" onclick="window.open(this.src)">`;
+        
+        const time = new Date(data.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        div.innerHTML = `${content}<div class="msg-time">${time} ${isMe ? '✓' : ''}</div>`;
+        
+        msgBox.appendChild(div);
+        msgBox.scrollTop = msgBox.scrollHeight;
     }
 
-    function closeChat() {
-        document.getElementById('chat-window').classList.remove('active');
-        currentTarget = null;
-    }
-
-    function sendMessage() {
+    function sendMessage(imgBase64 = null) {
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
-        if (text && currentTarget) {
+        if ((text || imgBase64) && currentTarget) {
             const chatId = currentTarget === '000' ? `notes_${myUin}` : [myUin, currentTarget].sort().join("_");
             db.ref("private_chats/" + chatId).push().set({
                 from: myUin,
                 text: text,
+                image: imgBase64,
                 time: Date.now()
             });
             input.value = "";
+            setTyping(false);
         }
+    }
+
+    // Обработка файлов
+    document.getElementById('fileInput').onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => sendMessage(event.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Статус "Печатает"
+    let typingTimer;
+    document.getElementById('msgInput').oninput = () => {
+        setTyping(true);
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => setTyping(false), 2000);
+    };
+
+    function setTyping(isTyping) {
+        if (!currentTarget || currentTarget === '000') return;
+        const chatId = [myUin, currentTarget].sort().join("_");
+        db.ref(`typing/${chatId}/${myUin}`).set(isTyping);
     }
 
     function addContact() {
-        const uin = prompt("UIN друга:");
-        const name = prompt("Имя:");
+        const uin = prompt("Введите UIN:");
+        const name = prompt("Имя контакта:");
         if (uin && name) {
-            contactData[uin] = name;
-            localStorage.setItem('asik_contact_data', JSON.stringify(contactData));
-            renderContacts();
+            db.ref(`user_contacts/${myUin}/${uin}`).set(name);
         }
     }
 
+    function closeChat() { document.getElementById('chat-window').classList.remove('active'); currentTarget = null; }
     document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-    renderContacts();
 </script>
 
 </body>
