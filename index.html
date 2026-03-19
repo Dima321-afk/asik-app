@@ -2,164 +2,139 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK ∞ Final Force</title>
+    <title>ASIK ∞ Light</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        :root { --primary: #00a884; --bg: #0b141a; --side: #111b21; --msg-me: #005c4b; --msg-them: #202c33; }
+        :root { --p: #00a884; --bg: #0b141a; --s: #111b21; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: white; overflow: hidden; }
         
-        #auth-screen { display: flex; align-items: center; justify-content: center; height: 100vh; position: fixed; inset: 0; z-index: 100; background: var(--bg); }
-        .auth-card { background: var(--side); padding: 30px; border-radius: 20px; width: 280px; text-align: center; border: 1px solid #2a3942; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; outline: none; }
-        .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        #auth-screen { display: flex; align-items: center; justify-content: center; height: 100vh; position: fixed; inset: 0; background: var(--bg); z-index: 100; }
+        .card { background: var(--s); padding: 30px; border-radius: 20px; width: 260px; text-align: center; border: 1px solid #2a3942; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
 
-        #main-app { display: none; height: 100vh; flex-direction: row; }
-        .sidebar { width: 300px; background: var(--side); border-right: 1px solid #2a3942; display: flex; flex-direction: column; }
-        .side-header { padding: 15px; background: #182229; display: flex; justify-content: space-between; align-items: center; }
-        
-        #contact-list { flex-grow: 1; overflow-y: auto; }
-        .contact { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        .contact:hover { background: #2a3942; }
-
-        .chat-area { flex-grow: 1; display: flex; flex-direction: column; }
-        #chat-header { padding: 15px; background: var(--side); border-bottom: 1px solid #2a3942; font-weight: bold; }
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px; border-radius: 10px; max-width: 70%; word-wrap: break-word; }
-        .me { align-self: flex-end; background: var(--msg-me); }
-        .them { align-self: flex-start; background: var(--msg-them); }
-
-        .input-box { padding: 15px; background: var(--side); display: flex; gap: 10px; }
-        .send-btn { background: var(--primary); border: none; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; }
+        #app { display: none; height: 100vh; flex-direction: row; }
+        .sidebar { width: 300px; background: var(--s); border-right: 1px solid #2a3942; display: flex; flex-direction: column; }
+        .chat { flex-grow: 1; display: flex; flex-direction: column; }
+        #msgs { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .m { padding: 10px; border-radius: 10px; max-width: 70%; }
+        .me { align-self: flex-end; background: #005c4b; }
+        .them { align-self: flex-start; background: #202c33; }
+        .item { padding: 15px; border-bottom: 1px solid #2a3942; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
-    <div class="auth-card">
-        <h1 style="color:var(--primary)">ASIK ∞</h1>
-        <input type="text" id="auth-uin" placeholder="Ваш UIN">
-        <input type="password" id="auth-pass" placeholder="Пароль">
-        <button class="btn" onclick="handleAuth()">ВОЙТИ</button>
-        <div id="auth-error" style="color:red; margin-top:10px; font-size:12px;"></div>
+    <div class="card">
+        <h1 style="color:var(--p)">ASIK ∞</h1>
+        <input type="text" id="u" placeholder="UIN">
+        <input type="password" id="p" placeholder="Пароль">
+        <button class="btn" onclick="auth()">ВОЙТИ</button>
     </div>
 </div>
 
-<div id="main-app">
+<div id="app">
     <div class="sidebar">
-        <div class="side-header">
-            <b id="display-uin">ASIK</b>
-            <button onclick="addFriend()" style="background:none; border:none; color:var(--primary); font-size:30px; cursor:pointer;">+</button>
+        <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; background:#182229;">
+            <b id="myU">ASIK</b>
+            <button onclick="add()" style="background:none; border:none; color:var(--p); font-size:30px; cursor:pointer;">+</button>
         </div>
-        <div id="contact-list"></div>
-        <button onclick="localStorage.clear(); location.reload();" style="padding:15px; color:gray; border:none; background:none; cursor:pointer;">Выйти</button>
+        <div id="list"></div>
+        <button onclick="localStorage.clear(); location.reload();" style="padding:10px; color:gray; border:none; background:none; cursor:pointer;">Выход</button>
     </div>
-    <div class="chat-area">
-        <div id="chat-header">Выберите контакт</div>
-        <div id="messages"></div>
-        <div class="input-box">
-            <input type="text" id="msgInput" placeholder="Сообщение..." autocomplete="off">
-            <button class="send-btn" onclick="sendMessage()">➤</button>
+    <div class="chat">
+        <div id="h" style="padding:15px; background:var(--s); border-bottom:1px solid #2a3942;">Чат не выбран</div>
+        <div id="msgs"></div>
+        <div style="padding:15px; background:var(--s); display:flex; gap:10px;">
+            <input type="text" id="msg" placeholder="Сообщение..." style="margin:0;">
+            <button class="btn" onclick="send()" style="width:60px;">➤</button>
         </div>
     </div>
 </div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    const proxyUrl = "https://dry-unit-8e71.dimitriykor321.workers.dev/";
-    firebase.initializeApp({ databaseURL: proxyUrl });
-    const db = firebase.database();
+    const url = "https://dry-unit-8e71.dimitriykor321.workers.dev/";
+    let my = localStorage.getItem('asik_uin');
+    let active = null;
 
-    let myUin = localStorage.getItem('asik_uin');
-    let activeChat = null;
-
-    if(myUin) {
+    if(my) {
         document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('main-app').style.display = 'flex';
-        document.getElementById('display-uin').innerText = "UIN: " + myUin;
-        loadContacts();
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('myU').innerText = "Я: " + my;
+        load();
+        setInterval(refresh, 3000); // Авто-обновление чата каждые 3 сек
     }
 
-    async function handleAuth() {
-        const uin = document.getElementById('auth-uin').value.trim();
-        const pass = btoa(document.getElementById('auth-pass').value.trim());
+    async function auth() {
+        const uin = document.getElementById('u').value.trim();
+        const pass = btoa(document.getElementById('p').value.trim());
         if(!uin) return;
         try {
-            const res = await fetch(`${proxyUrl}users_auth/${uin}.json`);
-            const data = await res.json();
-            if(data && data.pass === pass) {
-                localStorage.setItem('asik_uin', uin);
-                location.reload();
-            } else if(!data) {
-                await fetch(`${proxyUrl}users_auth/${uin}.json`, { method: 'PUT', body: JSON.stringify({ pass }) });
-                localStorage.setItem('asik_uin', uin);
-                location.reload();
-            }
-        } catch(e) { alert("Ошибка входа!"); }
+            const r = await fetch(`${url}users_auth/${uin}.json`);
+            const d = await r.json();
+            if(d && d.pass === pass) { go(uin); }
+            else if(!d) {
+                await fetch(`${url}users_auth/${uin}.json`, { method: 'PUT', body: JSON.stringify({pass}) });
+                go(uin);
+            } else { alert("Пароль!"); }
+        } catch(e) { alert("Ошибка связи!"); }
     }
 
-    function loadContacts() {
-        db.ref(`user_contacts/${myUin}`).on('value', snap => {
-            const list = document.getElementById('contact-list');
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const uin = child.key; const name = child.val();
-                const d = document.createElement('div');
-                d.className = 'contact';
-                d.innerHTML = `<b>${name}</b><br><small>UIN: ${uin}</small>`;
-                d.onclick = () => openChat(uin, name);
-                list.appendChild(d);
+    function go(uin) { localStorage.setItem('asik_uin', uin); location.reload(); }
+
+    async function load() {
+        try {
+            const r = await fetch(`${url}user_contacts/${my}.json`);
+            const d = await r.json();
+            const l = document.getElementById('list');
+            l.innerHTML = "";
+            if(d) Object.keys(d).forEach(k => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                div.innerText = d[k];
+                div.onclick = () => { active = k; document.getElementById('h').innerText = d[k]; refresh(); };
+                l.appendChild(div);
             });
-        });
+        } catch(e) {}
     }
 
-    async function addFriend() {
+    async function add() {
         const uin = prompt("UIN друга:");
         const name = prompt("Имя:");
         if(uin && name) {
-            // Силовой метод записи напрямую через fetch
-            const res = await fetch(`${proxyUrl}user_contacts/${myUin}/${uin}.json`, {
-                method: 'PUT',
-                body: JSON.stringify(name)
-            });
-            if(res.ok) { alert("Добавлено!"); } else { alert("Ошибка воркера!"); }
+            await fetch(`${url}user_contacts/${my}/${uin}.json`, { method: 'PUT', body: JSON.stringify(name) });
+            load();
         }
     }
 
-    function openChat(uin, name) {
-        activeChat = uin;
-        document.getElementById('chat-header').innerText = "Чат с: " + name;
-        const chatId = [myUin, uin].sort().join("_");
-        db.ref("private_chats/" + chatId).off();
-        db.ref("private_chats/" + chatId).on("value", snap => {
-            const box = document.getElementById('messages');
-            box.innerHTML = "";
-            snap.forEach(child => {
-                const m = child.val();
-                const div = document.createElement('div');
-                div.className = "msg " + (m.from == myUin ? "me" : "them");
-                div.innerText = m.text;
-                box.appendChild(div);
-            });
-            box.scrollTop = box.scrollHeight;
+    async function send() {
+        const i = document.getElementById('msg');
+        if(!i.value.trim() || !active) return;
+        const id = [my, active].sort().join("_");
+        await fetch(`${url}private_chats/${id}.json`, { 
+            method: 'POST', 
+            body: JSON.stringify({ from: my, text: i.value.trim() }) 
         });
+        i.value = "";
+        refresh();
     }
 
-    async function sendMessage() {
-        const inp = document.getElementById('msgInput');
-        if(!inp.value.trim() || !activeChat) return;
-        const chatId = [myUin, activeChat].sort().join("_");
-        
-        // Силовой метод отправки сообщения напрямую
-        await fetch(`${proxyUrl}private_chats/${chatId}.json`, {
-            method: 'POST',
-            body: JSON.stringify({ from: myUin, text: inp.value.trim(), time: Date.now() })
+    async function refresh() {
+        if(!active) return;
+        const id = [my, active].sort().join("_");
+        const r = await fetch(`${url}private_chats/${id}.json`);
+        const d = await r.json();
+        const b = document.getElementById('msgs');
+        b.innerHTML = "";
+        if(d) Object.values(d).forEach(m => {
+            const div = document.createElement('div');
+            div.className = "m " + (m.from == my ? "me" : "them");
+            div.innerText = m.text;
+            b.appendChild(div);
         });
-        inp.value = "";
+        b.scrollTop = b.scrollHeight;
     }
-
-    document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
 </script>
 </body>
 </html>
