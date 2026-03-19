@@ -2,26 +2,74 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ASIK ∞ Fix</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASIK ∞ Ultimate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
-        body { background: #0b141a; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .auth-card { background: #111b21; padding: 40px; border-radius: 20px; width: 300px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #2a3942; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #00a884; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        #auth-error { color: #ff4b4b; font-size: 13px; margin-top: 10px; min-height: 20px; }
-        .hidden { display: none !important; }
+        :root {
+            --primary: #00a884; --bg-dark: #0b141a; --bg-sidebar: #111b21;
+            --text-main: #e9edef; --text-muted: #8696a0; --my-msg: #005c4b;
+            --their-msg: #202c33; --danger: #ff4b4b;
+        }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
+        
+        /* Экран входа */
+        #auth-screen { position: fixed; inset: 0; background: var(--bg-dark); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: var(--bg-sidebar); padding: 30px; border-radius: 20px; width: 280px; text-align: center; border: 1px solid #2a3942; }
+        .auth-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: white; box-sizing: border-box; }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+
+        /* Основной интерфейс */
+        .app-container { display: flex; width: 100vw; height: 100vh; }
+        .sidebar { width: 100%; max-width: 400px; background: var(--bg-sidebar); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+        .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        #contact-list { flex-grow: 1; overflow-y: auto; }
+        .contact-item { padding: 15px; display: flex; align-items: center; gap: 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .contact-item:hover { background: rgba(255,255,255,0.05); }
+
+        .chat-view { flex-grow: 1; display: flex; flex-direction: column; background: var(--bg-dark); position: relative; }
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; color: white; }
+        .msg-bubble.me { align-self: flex-end; background: var(--my-msg); }
+        .msg-bubble.them { align-self: flex-start; background: var(--their-msg); }
+
+        .input-area { padding: 10px; background: var(--bg-sidebar); display: flex; gap: 10px; }
+        #msgInput { flex-grow: 1; padding: 10px; border-radius: 20px; border: none; background: #2a3942; color: white; outline: none; }
+        
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #2a3942; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h1 style="color:#00a884; margin-bottom: 20px;">ASIK ∞</h1>
-        <input type="text" id="auth-uin" placeholder="Ваш UIN (номер)">
-        <input type="password" id="auth-pass" placeholder="Пароль">
-        <button onclick="handleAuth()">ВОЙТИ / СОЗДАТЬ</button>
-        <div id="auth-error"></div>
+        <h1 style="color:var(--primary)">ASIK ∞</h1>
+        <input type="text" id="auth-uin" class="auth-input" placeholder="Ваш UIN">
+        <input type="password" id="auth-pass" class="auth-input" placeholder="Пароль">
+        <button class="auth-btn" onclick="handleAuth()">ВОЙТИ / СОЗДАТЬ</button>
+        <div id="auth-error" style="color:var(--danger); font-size:12px; margin-top:10px;"></div>
+    </div>
+</div>
+
+<div class="app-container">
+    <div class="sidebar">
+        <div class="header">
+            <div class="avatar" id="my-avatar">?</div>
+            <h3 style="color:var(--primary); margin:0;">Чат</h3>
+            <button onclick="addFriend()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">+</button>
+        </div>
+        <div id="contact-list"></div>
+        <button onclick="logout()" style="padding:15px; color:var(--danger); background:none; border:none; cursor:pointer;">Выйти</button>
+    </div>
+
+    <div class="chat-view">
+        <div id="chat-header" style="padding:15px; background:var(--bg-sidebar); font-weight:bold;">Выберите чат</div>
+        <div id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="msgInput" placeholder="Введите сообщение...">
+            <button onclick="sendMessage()" style="background:none; border:none; color:var(--primary); font-size:20px; cursor:pointer;">➤</button>
+        </div>
     </div>
 </div>
 
@@ -29,15 +77,17 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-    // Ссылка на твой воркер Cloudflare (со слэшем!)
     const proxyUrl = "https://dry-unit-8e71.dimitriykor321.workers.dev/";
+    firebase.initializeApp({ databaseURL: proxyUrl });
+    const db = firebase.database();
 
-    // Инициализация базы
-    try {
-        firebase.initializeApp({ databaseURL: proxyUrl });
-        var db = firebase.database();
-    } catch(e) {
-        document.getElementById('auth-error').innerText = "Ошибка загрузки Firebase!";
+    let myUin = localStorage.getItem('asik_uin');
+    let currentChat = null;
+
+    if(myUin) {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('my-avatar').innerText = myUin[0];
+        loadContacts();
     }
 
     async function handleAuth() {
@@ -45,51 +95,83 @@
         const passRaw = document.getElementById('auth-pass').value.trim();
         const err = document.getElementById('auth-error');
 
-        if(!uin || passRaw.length < 4) {
-            err.innerText = "Введите UIN и пароль (4+)!";
-            return;
-        }
-
+        if(!uin || passRaw.length < 4) { err.innerText = "Ошибка в данных!"; return; }
+        
         const pass = btoa(passRaw);
-        err.style.color = "#00a884";
-        err.innerText = "Связь через Cloudflare...";
+        err.style.color = "var(--primary)";
+        err.innerText = "Связь с базой...";
 
         try {
-            const snap = await db.ref('users_auth/' + uin).once('value');
-            const data = snap.val();
+            // Используем fetch напрямую через прокси для надежности авторизации
+            const res = await fetch(`${proxyUrl}users_auth/${uin}.json`);
+            const data = await res.json();
 
             if(data) {
-                if(data.pass === pass) {
-                    localStorage.setItem('asik_uin', uin);
-                    alert("Успех! Перезагрузи страницу.");
-                    location.reload();
-                } else {
-                    err.style.color = "#ff4b4b";
-                    err.innerText = "Неверный пароль!";
-                }
+                if(data.pass === pass) { login(uin); } 
+                else { err.style.color = "var(--danger)"; err.innerText = "Неверный пароль!"; }
             } else {
-                if(confirm("Создать новый аккаунт " + uin + "?")) {
-                    await db.ref('users_auth/' + uin).set({ pass: pass });
-                    localStorage.setItem('asik_uin', uin);
-                    location.reload();
+                if(confirm("Создать UIN " + uin + "?")) {
+                    await db.ref('users_auth/' + uin).set({ pass });
+                    login(uin);
                 }
             }
-        } catch(e) {
-            err.style.color = "#ff4b4b";
-            err.innerText = "Мост не отвечает. Проверь Cloudflare!";
-            console.error(e);
-        }
+        } catch(e) { err.innerText = "Ошибка моста. Проверь Cloudflare!"; }
     }
 
-    // Если уже залогинены - просто покажем сообщение (пока без интерфейса чата для теста)
-    if(localStorage.getItem('asik_uin')) {
-        document.getElementById('auth-screen').innerHTML = `
-            <div class="auth-card">
-                <h2 style="color:#00a884">Вы в сети!</h2>
-                <p>UIN: ${localStorage.getItem('asik_uin')}</p>
-                <button onclick="localStorage.clear(); location.reload();" style="background:#ff4b4b">ВЫЙТИ</button>
-            </div>`;
+    function login(uin) { localStorage.setItem('asik_uin', uin); location.reload(); }
+    function logout() { localStorage.clear(); location.reload(); }
+
+    function loadContacts() {
+        db.ref(`user_contacts/${myUin}`).on('value', snap => {
+            const list = document.getElementById('contact-list');
+            list.innerHTML = "";
+            snap.forEach(child => {
+                const div = document.createElement('div');
+                div.className = 'contact-item';
+                div.innerHTML = `<div class="avatar">${child.val()[0]}</div><b>${child.val()}</b>`;
+                div.onclick = () => openChat(child.key, child.val());
+                list.appendChild(div);
+            });
+        });
     }
+
+    function openChat(targetUin, name) {
+        currentChat = targetUin;
+        document.getElementById('chat-header').innerText = "Чат с: " + name;
+        const chatId = [myUin, targetUin].sort().join("_");
+        
+        db.ref("private_chats/" + chatId).off();
+        db.ref("private_chats/" + chatId).on("value", snap => {
+            const box = document.getElementById('messages');
+            box.innerHTML = "";
+            snap.forEach(child => {
+                const m = child.val();
+                const div = document.createElement('div');
+                div.className = `msg-bubble ${m.from == myUin ? 'me' : 'them'}`;
+                div.innerText = m.text;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('msgInput');
+        if(!input.value.trim() || !currentChat) return;
+        const chatId = [myUin, currentChat].sort().join("_");
+        db.ref("private_chats/" + chatId).push().set({
+            from: myUin, text: input.value.trim(), time: Date.now()
+        });
+        input.value = "";
+    }
+
+    function addFriend() {
+        const uin = prompt("UIN друга:");
+        const name = prompt("Имя:");
+        if(uin && name) db.ref(`user_contacts/${myUin}/${uin}`).set(name);
+    }
+
+    document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
 </script>
 
 </body>
